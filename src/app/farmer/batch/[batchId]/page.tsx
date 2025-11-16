@@ -1,0 +1,822 @@
+"use client"
+
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import {
+    Wheat,
+    MapPin,
+    Calendar,
+    User,
+    Share2,
+    Download,
+    Edit3,
+    Bell,
+    Home,
+    ChevronRight,
+    QrCode,
+    Check,
+    Clock,
+    Truck,
+    Store,
+    Award,
+    DollarSign,
+    History,
+    MessageSquare,
+    Copy,
+    Heart,
+    ChevronLeft,
+    ChevronUp,
+    ExternalLink
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../ui/card';
+import { Badge } from '../../../ui/badge';
+import { Button } from '../../../ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '../../../ui/avatar';
+import { Separator } from '../../../ui/separator';
+import { Textarea } from '../../../ui/textarea';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { ImageWithFallback } from './_components/ImageWithFallback';
+
+// Mock data for the batch
+const batchData = {
+    id: 'BT-2024-001',
+    cropType: 'Wheat',
+    quantity: '500 kg',
+    status: 'In Transit',
+    harvestDate: '2024-12-15',
+    farmLocation: 'Punjab, India',
+    currentOwner: 'Green Valley Distributors',
+    qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=BT-2024-001',
+    farmer: {
+        name: 'Rajesh Kumar',
+        avatar: '/placeholder-farmer.jpg',
+        location: 'Amritsar, Punjab'
+    },
+    distributor: {
+        name: 'Green Valley Distributors',
+        avatar: '/placeholder-distributor.jpg',
+        location: 'Delhi, India'
+    },
+    retailer: {
+        name: 'Fresh Mart',
+        avatar: '/placeholder-retailer.jpg',
+        location: 'Mumbai, India'
+    }
+};
+
+const priceData = [
+    { stage: 'Farmer', price: 25, color: '#228B22' },
+    { stage: 'Distributor', price: 35, color: '#FF9933' },
+    { stage: 'Retailer', price: 45, color: '#000080' },
+    { stage: 'Consumer', price: 55, color: '#32CD32' }
+];
+
+const certifications = [
+    {
+        id: 1,
+        name: 'Organic Certification',
+        authority: 'APEDA',
+        validUntil: '2025-12-31',
+        icon: Award
+    },
+    {
+        id: 2,
+        name: 'Quality Grade A',
+        authority: 'FCI',
+        validUntil: '2025-06-30',
+        icon: Award
+    },
+    {
+        id: 3,
+        name: 'Pesticide Free',
+        authority: 'FSSAI',
+        validUntil: '2025-12-31',
+        icon: Award
+    }
+];
+
+const transactions = [
+    {
+        id: 1,
+        hash: '0x1a2b3c4d5e6f7g8h9i0j',
+        timestamp: '2024-12-15 10:30 AM',
+        action: 'Batch Created',
+        gasfee: '0.001 ETH',
+        status: 'Confirmed'
+    },
+    {
+        id: 2,
+        hash: '0x2b3c4d5e6f7g8h9i0j1k',
+        timestamp: '2024-12-16 02:15 PM',
+        action: 'Transferred to Distributor',
+        gasfee: '0.002 ETH',
+        status: 'Confirmed'
+    },
+    {
+        id: 3,
+        hash: '0x3c4d5e6f7g8h9i0j1k2l',
+        timestamp: '2024-12-18 11:45 AM',
+        action: 'Quality Verified',
+        gasfee: '0.001 ETH',
+        status: 'Confirmed'
+    }
+];
+
+const timelineSteps = [
+    {
+        id: 1,
+        title: 'Farmer',
+        name: 'Rajesh Kumar',
+        location: 'Amritsar, Punjab',
+        date: '2024-12-15',
+        time: '10:30 AM',
+        status: 'completed',
+        icon: User,
+        avatar: '/placeholder-farmer.jpg'
+    },
+    {
+        id: 2,
+        title: 'Distributor',
+        name: 'Green Valley Distributors',
+        location: 'Delhi, India',
+        date: '2024-12-16',
+        time: '02:15 PM',
+        status: 'completed',
+        icon: Truck,
+        avatar: '/placeholder-distributor.jpg'
+    },
+    {
+        id: 3,
+        title: 'Retailer',
+        name: 'Fresh Mart',
+        location: 'Mumbai, India',
+        date: '2024-12-20',
+        time: 'Expected',
+        status: 'current',
+        icon: Store,
+        avatar: '/placeholder-retailer.jpg'
+    },
+    {
+        id: 4,
+        title: 'Consumer',
+        name: 'End Customer',
+        location: 'Mumbai, India',
+        date: '2024-12-22',
+        time: 'Expected',
+        status: 'pending',
+        icon: User,
+        avatar: '/placeholder-consumer.jpg'
+    }
+];
+
+const comments = [
+    {
+        id: 1,
+        user: 'Rajesh Kumar',
+        role: 'Farmer',
+        avatar: '/placeholder-farmer.jpg',
+        comment: 'High quality wheat harvest this season. Organic farming methods used.',
+        timestamp: '2024-12-15 11:00 AM',
+        likes: 5
+    },
+    {
+        id: 2,
+        user: 'Green Valley Distributors',
+        role: 'Distributor',
+        avatar: '/placeholder-distributor.jpg',
+        comment: 'Quality inspection completed. Ready for transport to retailer.',
+        timestamp: '2024-12-17 09:30 AM',
+        likes: 3
+    }
+];
+
+// Header Component
+const Header = () => (
+    <motion.header
+        className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+    >
+        <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                        <Wheat className="h-8 w-8" style={{ color: '#FF9933' }} />
+                        <span className="text-xl font-semibold">KrishiNetra</span>
+                    </div>
+                    <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
+                        <Home className="h-4 w-4" />
+                        <span>Dashboard</span>
+                        <ChevronRight className="h-4 w-4" />
+                        <span>Batches</span>
+                        <ChevronRight className="h-4 w-4" />
+                        <span className="text-foreground">Batch Detail</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                    <h1 className="hidden lg:block text-lg font-medium">
+                        Batch #{batchData.id} - {batchData.cropType}
+                    </h1>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm">
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit
+                    </Button>
+                    <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        QR
+                    </Button>
+                    <Button variant="outline" size="sm">
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                        <Bell className="h-4 w-4" />
+                    </Button>
+                    <Avatar className="h-8 w-8">
+                        <AvatarImage src="/placeholder-user.jpg" />
+                        <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                </div>
+            </div>
+        </div>
+    </motion.header>
+);
+
+// Batch Summary Card Component
+const BatchSummaryCard = () => {
+    const [qrHovered, setQrHovered] = useState(false);
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Active': return 'bg-green-100 text-green-800 border-green-200';
+            case 'In Transit': return 'bg-amber-100 text-amber-800 border-amber-200';
+            case 'Delivered': return 'bg-blue-100 text-blue-800 border-blue-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    const downloadQR = () => {
+        const link = document.createElement('a');
+        link.href = batchData.qrCode;
+        link.download = `${batchData.id}-qr-code.png`;
+        link.click();
+        toast.success('QR Code downloaded successfully!');
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+        >
+            <Card className="bg-gradient-to-r from-orange-50 to-white border-orange-200">
+                <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                        <div className="flex-1 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                <div className="flex items-center space-x-3">
+                                    <Wheat className="h-8 w-8" style={{ color: '#FF9933' }} />
+                                    <div>
+                                        <h2 className="text-2xl font-semibold">{batchData.id}</h2>
+                                        <p className="text-muted-foreground">{batchData.cropType}</p>
+                                    </div>
+                                </div>
+                                <Badge className={`${getStatusColor(batchData.status)} px-3 py-1`}>
+                                    {batchData.status}
+                                </Badge>
+                                <Badge variant="secondary" className="px-3 py-1">
+                                    {batchData.quantity}
+                                </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                                <div className="flex items-center space-x-2">
+                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Harvest Date</p>
+                                        <p className="font-medium">{batchData.harvestDate}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Farm Location</p>
+                                        <p className="font-medium">{batchData.farmLocation}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Current Owner</p>
+                                        <p className="font-medium">{batchData.currentOwner}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col items-center space-y-2">
+                            <motion.div
+                                className="cursor-pointer border-2 border-dashed border-orange-200 rounded-lg p-2"
+                                whileHover={{ scale: qrHovered ? 1.1 : 1.05 }}
+                                onHoverStart={() => setQrHovered(true)}
+                                onHoverEnd={() => setQrHovered(false)}
+                                onClick={downloadQR}
+                            >
+                                <QrCode className="h-24 w-24" style={{ color: '#FF9933' }} />
+                            </motion.div>
+                            <p className="text-xs text-muted-foreground text-center">
+                                Click to download QR code
+                            </p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </motion.div>
+    );
+};
+
+// Timeline Component
+const ProvenanceTimeline = () => {
+    const [selectedStep, setSelectedStep] = useState<number | null>(null);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+        >
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                        <Truck className="h-5 w-5" style={{ color: '#000080' }} />
+                        <span>Provenance Timeline</span>
+                    </CardTitle>
+                    <CardDescription>
+                        Track the journey of this batch from farm to consumer
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="relative">
+                        {/* Desktop Timeline */}
+                        <div className="hidden lg:flex justify-between items-center relative">
+                            <div className="absolute top-6 left-0 right-0 h-0.5 bg-gradient-to-r from-green-500 via-orange-500 to-blue-500 opacity-30"></div>
+
+                            {timelineSteps.map((step, index) => (
+                                <motion.div
+                                    key={step.id}
+                                    className="flex flex-col items-center space-y-2 relative z-10 cursor-pointer"
+                                    whileHover={{ scale: 1.05 }}
+                                    onClick={() => setSelectedStep(selectedStep === step.id ? null : step.id)}
+                                >
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 ${
+                                        step.status === 'completed' ? 'bg-green-500 border-green-500 text-white' :
+                                            step.status === 'current' ? 'bg-orange-500 border-orange-500 text-white' :
+                                                'bg-gray-200 border-gray-300 text-gray-500'
+                                    }`}>
+                                        {step.status === 'completed' ? (
+                                            <Check className="h-5 w-5" />
+                                        ) : step.status === 'current' ? (
+                                            <motion.div
+                                                animate={{ scale: [1, 1.2, 1] }}
+                                                transition={{ duration: 2, repeat: Infinity }}
+                                            >
+                                                <Clock className="h-5 w-5" />
+                                            </motion.div>
+                                        ) : (
+                                            <step.icon className="h-5 w-5" />
+                                        )}
+                                    </div>
+
+                                    <div className="text-center">
+                                        <p className="font-medium text-sm">{step.title}</p>
+                                        <p className="text-xs text-muted-foreground">{step.name}</p>
+                                        <p className="text-xs text-muted-foreground">{step.date}</p>
+                                    </div>
+
+                                    {/* Expandable details */}
+                                    {selectedStep === step.id && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="absolute top-16 bg-white border rounded-lg shadow-lg p-4 w-64 z-20"
+                                        >
+                                            <div className="flex items-center space-x-3 mb-2">
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarImage src={step.avatar} />
+                                                    <AvatarFallback>{step.name.charAt(0)}</AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-medium text-sm">{step.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{step.location}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                                <p>Date: {step.date}</p>
+                                                <p>Time: {step.time}</p>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Mobile Timeline */}
+                        <div className="lg:hidden space-y-4">
+                            {timelineSteps.map((step, index) => (
+                                <div key={step.id} className="flex items-start space-x-4">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                                        step.status === 'completed' ? 'bg-green-500 border-green-500 text-white' :
+                                            step.status === 'current' ? 'bg-orange-500 border-orange-500 text-white' :
+                                                'bg-gray-200 border-gray-300 text-gray-500'
+                                    }`}>
+                                        {step.status === 'completed' ? (
+                                            <Check className="h-4 w-4" />
+                                        ) : step.status === 'current' ? (
+                                            <Clock className="h-4 w-4" />
+                                        ) : (
+                                            <step.icon className="h-4 w-4" />
+                                        )}
+                                    </div>
+
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="font-medium">{step.title}</p>
+                                                <p className="text-sm text-muted-foreground">{step.name}</p>
+                                                <p className="text-sm text-muted-foreground">{step.location}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm text-muted-foreground">{step.date}</p>
+                                                <p className="text-xs text-muted-foreground">{step.time}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </motion.div>
+    );
+};
+
+// Product Details Tab
+const ProductDetailsTab = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-4">
+            <h3 className="font-semibold">Specifications</h3>
+            <div className="space-y-3">
+                <div className="flex justify-between py-2 border-b">
+                    <span className="text-muted-foreground">Crop Variety</span>
+                    <span className="font-medium">HD-2967 (High Yielding)</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                    <span className="text-muted-foreground">Grade</span>
+                    <span className="font-medium">Grade A</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                    <span className="text-muted-foreground">Moisture Content</span>
+                    <span className="font-medium">12.5%</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                    <span className="text-muted-foreground">Protein Content</span>
+                    <span className="font-medium">11.8%</span>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                    <span className="text-muted-foreground">Organic Certified</span>
+                    <span className="font-medium text-green-600">Yes</span>
+                </div>
+            </div>
+        </div>
+
+        <div className="space-y-4">
+            <h3 className="font-semibold">Image Gallery</h3>
+            <div className="grid grid-cols-2 gap-4">
+                <ImageWithFallback
+                    src="https://images.unsplash.com/photo-1729041221905-0519efecaa92?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3aGVhdCUyMGdyYWlucyUyMGFncmljdWx0dXJlfGVufDF8fHx8MTc1OTIwNzM3NXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+                    alt="Wheat grains"
+                    className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                />
+                <ImageWithFallback
+                    src="https://images.unsplash.com/photo-1666987570506-f8c3e05b6c58?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjBhZ3JpY3VsdHVyZSUyMGZhcm0lMjBjcm9wc3xlbnwxfHx8fDE3NTkyMDczNzJ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+                    alt="Farm field"
+                    className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                />
+                <ImageWithFallback
+                    src="https://images.unsplash.com/photo-1695150601855-f545034a070a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxyaWNlJTIwZmFybWluZyUyMGluZGlhfGVufDF8fHx8MTc1OTE2MDMzOXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+                    alt="Rice farming"
+                    className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                />
+                <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center text-muted-foreground text-sm">
+                    +2 more photos
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+// Quality Certifications Tab
+const QualityCertificationsTab = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {certifications.map((cert) => (
+            <motion.div
+                key={cert.id}
+                whileHover={{ scale: 1.02 }}
+                className="cursor-pointer"
+            >
+                <Card className="h-full">
+                    <CardContent className="p-4">
+                        <div className="flex items-start space-x-3">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                                <cert.icon className="h-5 w-5 text-green-600" />
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-medium">{cert.name}</h4>
+                                <p className="text-sm text-muted-foreground">by {cert.authority}</p>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Valid until: {cert.validUntil}
+                                </p>
+                                <Button variant="ghost" size="sm" className="mt-2 p-0 h-auto">
+                                    <Download className="h-3 w-3 mr-1" />
+                                    Download
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </motion.div>
+        ))}
+    </div>
+);
+
+// Price Transparency Tab
+const PriceTransparencyTab = () => {
+    const [selectedBar, setSelectedBar] = useState<string | null>(null);
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {priceData.map((item) => (
+                    <Card key={item.stage} className="text-center">
+                        <CardContent className="p-4">
+                            <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground">{item.stage}</p>
+                                <p className="text-xl font-semibold">₹{item.price}</p>
+                                <p className="text-xs text-muted-foreground">per kg</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Price Breakdown Chart</CardTitle>
+                    <CardDescription>
+                        Price progression from farmer to consumer
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={priceData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="stage" />
+                                <YAxis />
+                                <Tooltip
+                                    formatter={(value) => [`₹${value}`, 'Price per kg']}
+                                    labelFormatter={(label) => `Stage: ${label}`}
+                                />
+                                <Bar
+                                    dataKey="price"
+                                    fill="#FF9933"
+                                    radius={[4, 4, 0, 0]}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+// Transaction History Tab
+const TransactionHistoryTab = () => {
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast.success('Transaction hash copied to clipboard!');
+    };
+
+    return (
+        <div className="space-y-4">
+            {transactions.map((transaction) => (
+                <Card key={transaction.id}>
+                    <CardContent className="p-4">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div className="space-y-2">
+                                <div className="flex items-center space-x-2">
+                                    <Badge variant="secondary">{transaction.action}</Badge>
+                                    <Badge className="bg-green-100 text-green-800">
+                                        {transaction.status}
+                                    </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                    {transaction.timestamp}
+                                </p>
+                                <div className="flex items-center space-x-2">
+                                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                        {transaction.hash.substring(0, 20)}...
+                                    </code>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => copyToClipboard(transaction.hash)}
+                                        className="h-6 w-6 p-0"
+                                    >
+                                        <Copy className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-sm text-muted-foreground">Gas Fee</p>
+                                <p className="font-medium">{transaction.gasfee}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+};
+
+// Comments Section
+const CommentsSection = () => {
+    const [newComment, setNewComment] = useState('');
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const addComment = () => {
+        if (newComment.trim()) {
+            toast.success('Comment added successfully!');
+            setNewComment('');
+        }
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+        >
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <MessageSquare className="h-5 w-5" style={{ color: '#228B22' }} />
+                            <span>Comments & Notes</span>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsExpanded(!isExpanded)}
+                        >
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </Button>
+                    </CardTitle>
+                </CardHeader>
+
+                {isExpanded && (
+                    <CardContent className="space-y-4">
+                        <div className="space-y-4">
+                            {comments.map((comment) => (
+                                <div key={comment.id} className="flex space-x-3">
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={comment.avatar} />
+                                        <AvatarFallback>{comment.user.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex items-center space-x-2">
+                                            <p className="font-medium text-sm">{comment.user}</p>
+                                            <Badge variant="outline" className="text-xs">
+                                                {comment.role}
+                                            </Badge>
+                                            <p className="text-xs text-muted-foreground">{comment.timestamp}</p>
+                                        </div>
+                                        <p className="text-sm">{comment.comment}</p>
+                                        <div className="flex items-center space-x-2">
+                                            <Button variant="ghost" size="sm" className="h-6 p-1">
+                                                <Heart className="h-3 w-3 mr-1" />
+                                                {comment.likes}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-2">
+                            <Textarea
+                                placeholder="Add a comment..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                className="min-h-20"
+                            />
+                            <div className="flex justify-between items-center">
+                                <p className="text-xs text-muted-foreground">
+                                    {newComment.length}/500 characters
+                                </p>
+                                <Button onClick={addComment} disabled={!newComment.trim()}>
+                                    Add Comment
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                )}
+            </Card>
+        </motion.div>
+    );
+};
+
+// Main App Component
+export default function App() {
+    const [activeTab, setActiveTab] = useState('details');
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
+            <Header />
+
+            <main className="container mx-auto px-4 py-6 space-y-6">
+                <BatchSummaryCard />
+                <ProvenanceTimeline />
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Detailed Information</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Tabs value={activeTab} onValueChange={setActiveTab}>
+                                <TabsList className="grid w-full grid-cols-4">
+                                    <TabsTrigger value="details" className="flex items-center space-x-2">
+                                        <Wheat className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Product Details</span>
+                                        <span className="sm:hidden">Details</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="certifications" className="flex items-center space-x-2">
+                                        <Award className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Certifications</span>
+                                        <span className="sm:hidden">Certs</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="pricing" className="flex items-center space-x-2">
+                                        <DollarSign className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Price Transparency</span>
+                                        <span className="sm:hidden">Price</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="transactions" className="flex items-center space-x-2">
+                                        <History className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Transaction History</span>
+                                        <span className="sm:hidden">History</span>
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <div className="mt-6">
+                                    <TabsContent value="details" className="space-y-4">
+                                        <ProductDetailsTab />
+                                    </TabsContent>
+
+                                    <TabsContent value="certifications" className="space-y-4">
+                                        <QualityCertificationsTab />
+                                    </TabsContent>
+
+                                    <TabsContent value="pricing" className="space-y-4">
+                                        <PriceTransparencyTab />
+                                    </TabsContent>
+
+                                    <TabsContent value="transactions" className="space-y-4">
+                                        <TransactionHistoryTab />
+                                    </TabsContent>
+                                </div>
+                            </Tabs>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <CommentsSection />
+            </main>
+        </div>
+    );
+}
