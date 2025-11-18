@@ -42,7 +42,7 @@ const disputeSchema = new mongoose.Schema(
                 desc:String,
                 url:String
             }
-        ]
+        ],
 
         status: {
             type: String,
