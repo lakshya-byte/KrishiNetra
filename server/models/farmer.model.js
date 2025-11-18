@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const farmerSchema = new mongoose.Schema(
 	{
-		user: {
+		userId: {
 			type: mongoose.Schema.Types.ObjectId,
 			ref: "User",
 			unique: true,
@@ -19,7 +19,7 @@ const farmerSchema = new mongoose.Schema(
 		],
 
 		crops: [String],
-		govtId: String,
+		govtId: String, // optional
 		certifications: [String],
 		batches: [
 			{
