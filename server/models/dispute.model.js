@@ -20,12 +20,6 @@ const disputeSchema = new mongoose.Schema(
             required: false,
         },
 
-        role: {
-            type: String,
-            enum: ["Farmer", "Distributor", "Retailer"],
-            required: true,
-        },
-
         title: {
             type: String,
             required: true,
@@ -66,7 +60,7 @@ const disputeSchema = new mongoose.Schema(
         resolvedBy:{
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
+            required: false,
         }
     },
     { timestamps: true }

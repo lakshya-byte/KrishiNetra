@@ -31,4 +31,4 @@ const farmerSchema = new mongoose.Schema(
 	{ timestamps: true }
 );
 
-export default mongoose.model("Farmer", farmerSchema);
+export const Farmer = mongoose.model("Farmer", farmerSchema);

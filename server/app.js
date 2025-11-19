@@ -17,7 +17,13 @@ app.use(express.static("public"));
 app.use(cookieParser());
 
 import authRouter from "./routes/auth.route.js";
+import farmerRouter from "./routes/farmer.route.js";
+import userRouter from "./routes/user.route.js";
+import distributorRouter from "./routes/distributor.route.js";
 
 app.use("/api/auth", authRouter);
+app.use("/api/farmer", farmerRouter);
+app.use('/api/user', userRouter);
+app.use("/api/distributor", distributorRouter);
 
 export { app };

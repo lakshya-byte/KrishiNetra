@@ -8,7 +8,7 @@ const batchSchema = new mongoose.Schema({
     },
     farmerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Farmer",
         required: true,
     },
     cropType: { type: String, required: true },
@@ -66,7 +66,14 @@ const batchSchema = new mongoose.Schema({
         grade:{type:String},
     },
     rating:{
-        
+        overall:Number,
+        distribution:{
+            1:Number,
+            2:Number,
+            3:Number,
+            4:Number,
+            5:Number
+        }
     }
 }, { timestamps: true }
 )

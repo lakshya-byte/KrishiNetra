@@ -1,4 +1,7 @@
 import { User } from "../models/user.model.js";
+import { Farmer } from "../models/farmer.model.js";
+import { Distributor } from "../models/distributor.model.js";
+import { Retailer } from "../models/retailer.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -7,9 +10,6 @@ const generateAccessAndRefreshTokens = async (userId) => {
 		const user = await User.findById(userId);
 		const accessToken = user.generateAccessToken();
 		const refreshToken = user.generateRefreshToken();
-
-		user.refreshToken = refreshToken;
-		await user.save({ validateBeforeSave: false });
 
 		return { accessToken, refreshToken };
 	} catch (error) {
@@ -53,24 +53,24 @@ const loginUser = async (req, res) => {
 		.cookie("accessToken", accessToken, options)
 		.cookie("refreshToken", refreshToken, options)
 		.json(
-			new ApiResponse(200, { user: profile }, "User logged in successfully")
+			new ApiResponse(200, { user: loggedInUser }, "User logged in successfully")
 		);
 };
 
 // https://localhost:8000/api/auth/logout
 const logoutUser = async (req, res) => {
-    await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } }, { new: true });
+    await User.findByIdAndUpdate(req.user._id, { new: true });
     const options = { secure: true, httpOnly: true, sameSite: "none" };
     return res.status(200).clearCookie("accessToken", options).clearCookie("refreshToken", options)
       .json(new ApiResponse(200, {}, "User logged out successfully"));
 };
 
-// https://localhost:8000/api/auth/register
-const registerUser = async (req, res) => {
+// https://localhost:8000/api/auth/registerFarmer
+const registerFarmer = async (req, res) => {
     try {
-        const { name, email, password,aadharNumber} = req.body;
+        const { name, email, password,aadharNumber,phone,role,farmLocation,farmName,crops,govtId} = req.body;
 
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !role) {
             return res
                 .status(400)
                 .json(new ApiError(400, "All fields are required"));
@@ -86,9 +86,100 @@ const registerUser = async (req, res) => {
         const newUser = await User.create({
             name,
             email,
-            password
+            password,
+            phone,
+            aadharNumber,
+            role
         });
 
+        const newFarmer = await Farmer.create({
+            userId: newUser._id,
+            farmLocation,
+            farmName,
+            crops,
+            govtId
+        });
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(newUser._id);
+
+        const safeUser = await User.findById(newUser._id).select(
+            "-password -refreshToken"
+        );
+
+        const options = {
+            secure: true,
+            httpOnly: true,
+            sameSite: "None",
+            maxAge: 24 * 60 * 60 * 1000
+        };
+
+        return res
+            .status(201)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(
+                    201,
+                    { user: safeUser , farmer: newFarmer},
+                    "User registered successfully"
+                )
+            );
+    } catch (error) {
+        console.log(error)
+        return res
+            .status(error.statusCode || 500)
+            .json(new ApiError(error.statusCode || 500, error.message));
+    }
+};
+
+// https://localhost:8000/api/auth/registerBuyer
+const registerBuyer = async (req, res) => {
+    try {
+        const { name, email, password, phone, aadharNumber,role,gstNumber,panNumber,tradeLicenseNumber,businessName,warehouseAddress,storeName,storeAddress} = req.body;
+
+        if (!name || !email || !password || !role || !gstNumber || !panNumber || !tradeLicenseNumber) {
+            return res
+                .status(400)
+                .json(new ApiError(400, "All fields are required"));
+        }
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res
+                .status(409)
+                .json(new ApiError(409, "Email already exists"));
+        }
+
+        const newUser = await User.create({
+            name,
+            email,
+            password,
+            phone,
+            aadharNumber,
+            role,
+        });
+        let roledUser = null;
+        if (role === "Distributor") {
+            const newDistributor = await Distributor.create({
+                userId: newUser._id,
+                gstNumber,
+                panNumber,
+                tradeLicenseNumber,
+                businessName,
+                warehouseAddress,
+            });
+            roledUser = newDistributor;
+        }else if(role === "Retailer"){
+            const newRetailer = await Retailer.create({
+                userId: newUser._id,
+                gstNumber,
+                panNumber,
+                tradeLicenseNumber,
+                storeName,
+                storeAddress,
+            });
+            roledUser = newRetailer;
+        }
         const { accessToken, refreshToken } =
             await generateAccessAndRefreshTokens(newUser._id);
 
@@ -110,16 +201,17 @@ const registerUser = async (req, res) => {
             .json(
                 new ApiResponse(
                     201,
-                    { user: safeUser },
+                    { user: safeUser, roledUser },
                     "User registered successfully"
                 )
             );
     } catch (error) {
+        console.log(error)
         return res
             .status(error.statusCode || 500)
             .json(new ApiError(error.statusCode || 500, error.message));
     }
-};
+}
 
 
-export { loginUser,logoutUser,registerUser};
+export { loginUser,logoutUser,registerFarmer,registerBuyer};
