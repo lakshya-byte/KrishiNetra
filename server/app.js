@@ -1,6 +1,11 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import authRouter from "./routes/auth.route.js";
+import farmerRouter from "./routes/farmer.route.js";
+import userRouter from "./routes/user.route.js";
+import distributorRouter from "./routes/distributor.route.js";
+import chatRouter from "./routes/chat.route.js";
 
 const app = express();
 
@@ -16,14 +21,12 @@ app.use(express.urlencoded({ extended: true, limit: "20kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 
-import authRouter from "./routes/auth.route.js";
-import farmerRouter from "./routes/farmer.route.js";
-import userRouter from "./routes/user.route.js";
-import distributorRouter from "./routes/distributor.route.js";
+
 
 app.use("/api/auth", authRouter);
 app.use("/api/farmer", farmerRouter);
 app.use('/api/user', userRouter);
 app.use("/api/distributor", distributorRouter);
+app.use('/api/chat', chatRouter)
 
 export { app };

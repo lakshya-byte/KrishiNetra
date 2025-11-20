@@ -20,6 +20,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
 // https://localhost:8000/api/auth/login
 const loginUser = async (req, res) => {
 	const { email, password } = req.body;
+    console.log("Received login request:", { email, password });
 	if (!email || !password)
 		return res.status(400).json(new ApiError(400, "All fields are required"));
 
