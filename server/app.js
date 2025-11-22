@@ -20,10 +20,12 @@ import authRouter from "./routes/auth.route.js";
 import farmerRouter from "./routes/farmer.route.js";
 import userRouter from "./routes/user.route.js";
 import distributorRouter from "./routes/distributor.route.js";
+import retailerRouter from "./routes/retailer.route.js";
 
 app.use("/api/auth", authRouter);
 app.use("/api/farmer", farmerRouter);
 app.use('/api/user', userRouter);
 app.use("/api/distributor", distributorRouter);
+app.use("/api/retailer", retailerRouter);
 
 export { app };

@@ -3,8 +3,9 @@ import { Farmer } from "../models/farmer.model.js";
 import { Batch } from "../models/batch.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { Distributor } from "../models/distributor.model.js";
 
-// https://localhost:8000/api/farmer/create-batch
+// http://localhost:8000/api/farmer/create-batch
 const createBatch = async (req, res) => {
     const {batchId, cropType, quantity, pricePerKg,harvestDate,location} = req.body;
 
@@ -23,6 +24,7 @@ const createBatch = async (req, res) => {
             farmerId: farmer._id,
             cropType,
             quantity,
+            availableQuantity:quantity,
             pricePerKg,
             harvestDate,
             location,
@@ -47,7 +49,7 @@ const createBatch = async (req, res) => {
     }
 };
 
-// https://localhost:8000/api/farmer/get-batches
+// http://localhost:8000/api/farmer/get-batches
 const getMyBatches = async (req, res) => {
     try{
         const farmer = await Farmer.findOne({ userId: req.user._id });
@@ -62,15 +64,15 @@ const getMyBatches = async (req, res) => {
     }
 
 };
-
+// http://localhost:8000/api/farmer/enlist-batch'
 const enlistBatch = async(req,res) => {
     try{
         const farmer = await Farmer.findOne({ userId: req.user._id });
         if (!farmer) {
             return res.status(404).json(new ApiError(404, "Farmer not found"));
         } 
-        const {id} = req.params;
-        const batch = await Batch.findOne({batchId:id, farmerId:farmer._id});
+        const {id} = req.body;
+        const batch = await Batch.findOne({_id:id, farmerId:farmer._id});
         if(!batch){
             return res.status(404).json(new ApiError(404, "Batch not found"));
         }
@@ -83,7 +85,113 @@ const enlistBatch = async(req,res) => {
     }
 }
 
+// http://localhost:8000/api/farmer/start-bidding
+const startBidding = async(req,res) => {
+    const {id,closingDate} = req.body;
+    try{
+        const farmer = await Farmer.findOne({ userId: req.user._id });
+        if (!farmer) {
+            return res.status(404).json(new ApiError(404, "Farmer not found"));
+        } 
+        const batch = await Batch.findOne({_id:id, farmerId:farmer._id});
+        if(!batch){
+            return res.status(404).json(new ApiError(404, "Batch not found"));
+        }
+        batch.status = "Bidding";
+        batch.bidding.status = "Open";
+        batch.bidding.closingDate = closingDate ? new Date(closingDate) : new Date(Date.now() + 7*24*60*60*1000); // 7 days from now
+        await batch.save();
+        return res.status(200).json(new ApiResponse(200, batch, "Batch enlisted successfully"));
+    }catch(err){
+        console.log("Error occured", err);
+        return res.status(500).json(new ApiError(500, "Internal Server Error"));
+    } 
+}
+
+// http://localhost:8000/api/farmer/stop-bidding
+const stopBidding = async(req,res) => {
+    const {id} = req.body;
+    try{
+        const farmer = await Farmer.findOne({ userId: req.user._id });
+        if (!farmer) {
+            return res.status(404).json(new ApiError(404, "Farmer not found"));
+        } 
+        const batch = await Batch.findOne({_id:id, farmerId:farmer._id});
+        if(!batch){
+            return res.status(404).json(new ApiError(404, "Batch not found"));
+        }
+        batch.bidding.status = "Closed";
+        batch.status = "InTransaction";
+        batch.bidding.biddingWinner = batch.bidding.bids.reduce((maxBid, currentBid) => {
+            return currentBid.bidPricePerKg > maxBid.bidPricePerKg ? currentBid : maxBid;
+        }, batch.bidding.bids[0]).distributorId;
+        await batch.save();
+        return res.status(200).json(new ApiResponse(200, batch, "Bidding stopped successfully"));
+    }catch(err){
+        console.log("Error occured", err);
+        return res.status(500).json(new ApiError(500, "Internal Server Error"));
+    } 
+}
+
+// http://localhost:8000/api/farmer/complete-transaction
+const completeTransaction = async(req,res) => {
+    const {id} = req.body;
+    try{
+        const farmer = await Farmer.findOne({ userId: req.user._id });
+        if (!farmer) {
+            return res.status(404).json(new ApiError(404, "Farmer not found"));
+        } 
+        const batch = await Batch.findOne({_id:id, farmerId:farmer._id});
+        if(!batch){
+            return res.status(404).json(new ApiError(404, "Batch not found"));
+        }
+        const winningUser = await Distributor.findById(batch.bidding.biddingWinner);
+        batch.tradeHistory.push({
+            owner: winningUser.userId,
+            pricePerKg: batch.bidding.bids.find(bid => bid.distributorId.toString() === batch.bidding.biddingWinner.toString()).bidPricePerKg,
+            updatedAt: Date.now()
+        });
+        batch.status = "SoldToDistributor";
+        await batch.save();
+        return res.status(200).json(new ApiResponse(200, batch, "Transaction completed successfully"));
+    }catch(err){
+        console.log("Error occured", err);
+        return res.status(500).json(new ApiError(500, "Internal Server Error"));
+    } 
+}
+
+// http://localhost:8000/api/farmer/update-batch
+const updateBatch = async(req,res) => {
+    // To be implemented
+    const {id, updates} = req.body;
+
+    try{
+        const farmer = await Farmer.findOne({ userId: req.user._id });
+        if (!farmer) {
+            return res.status(404).json(new ApiError(404, "Farmer not found"));
+        } 
+        const batch = await Batch.findOne({_id:id, farmerId:farmer._id});
+        if(!batch){
+            return res.status(404).json(new ApiError(404, "Batch not found"));
+        }
+
+        // Apply updates
+        for(const key in updates){
+            batch[key] = updates[key];
+        }
+        await batch.save();
+        return res.status(200).json(new ApiResponse(200, batch, "Batch updated successfully"));
+    }catch(error){
+        return res.status(500).json(new ApiError(500, "Internal Server Error"));
+    }
+}
+
 export {
     createBatch,
     getMyBatches,
+    enlistBatch,
+    updateBatch,
+    startBidding,
+    stopBidding,
+    completeTransaction
 };
