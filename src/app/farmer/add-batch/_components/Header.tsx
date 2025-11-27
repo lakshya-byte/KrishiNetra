@@ -1,5 +1,5 @@
 import { Bell, User } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/ui/avatar";
 
 export function Header() {
   return (

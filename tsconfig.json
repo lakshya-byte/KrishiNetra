@@ -1,4 +1,5 @@
 {
+
   "compilerOptions": {
     "target": "ES2017",
     "lib": [
@@ -6,6 +7,9 @@
       "dom.iterable",
       "esnext"
     ],
+    "paths": {
+        "@/*": ["./src/*"]
+    },
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,

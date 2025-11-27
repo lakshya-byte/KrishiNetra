@@ -54,7 +54,11 @@ const loginUser = async (req, res) => {
 		.cookie("accessToken", accessToken, options)
 		.cookie("refreshToken", refreshToken, options)
 		.json(
-			new ApiResponse(200, { user: loggedInUser }, "User logged in successfully")
+			new ApiResponse(200, { 
+                user: loggedInUser,
+                accessToken,
+                refreshToken
+            }, "User logged in successfully")
 		);
 };
 
@@ -121,7 +125,12 @@ const registerFarmer = async (req, res) => {
             .json(
                 new ApiResponse(
                     201,
-                    { user: safeUser , farmer: newFarmer},
+                    { 
+                        user: safeUser , 
+                        farmer: newFarmer,
+                        accessToken,
+                        refreshToken
+                    },
                     "User registered successfully"
                 )
             );
@@ -202,7 +211,12 @@ const registerBuyer = async (req, res) => {
             .json(
                 new ApiResponse(
                     201,
-                    { user: safeUser, roledUser },
+                    { 
+                        user: safeUser, 
+                        roledUser,
+                        accessToken,
+                        refreshToken
+                    },
                     "User registered successfully"
                 )
             );
