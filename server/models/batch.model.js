@@ -20,13 +20,12 @@ const batchSchema = new mongoose.Schema({
         name: String,
         desc:String,
         url:String
-    }],        // Cloudinary/S3 links
+    }],       
     documents: [{ 
         name: String,
         desc:String,
         url:String
-    }],     // optional certificates
-    // Status of the batch
+    }],      
     status: {
         type: String,
         enum: [
