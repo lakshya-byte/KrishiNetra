@@ -9,7 +9,8 @@ const verifyJWT = async (req, res, next) => {
 			req.header("Authorization")?.replace("Bearer ", "");
 
 		if (!token) {
-			throw new ApiError(401, "Unauthorization request");
+            console.log("Unauthorized: No token provided");
+            return res.status(401).json(new ApiError(401, "Unauthorized: No token provided"));
 		}
 
 		const decoderToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -18,14 +19,16 @@ const verifyJWT = async (req, res, next) => {
 		);
 
 		if (!user) {
-			throw new ApiError(404, "Invaild Access Token");
-		}
+            console.log("Unauthorized: No token provided");
+            return res.status(401).json(new ApiError(401, "Unauthorized: No token provided"));
+        }
 
 		req.user = user;
 
 		next();
 	} catch (error) {
-		throw new ApiError(401, error?.message || "Invaild Access Token");
+        console.log("Unauthorized: Invalid token");
+		return res.status(401).json(new ApiError(401, error?.message || "Invalid Access Token"));
 	}
 };
 const authorizeRoles = (...allowedRoles) => {

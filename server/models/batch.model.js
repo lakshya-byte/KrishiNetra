@@ -16,7 +16,6 @@ const batchSchema = new mongoose.Schema({
     pricePerKg: { type: Number, required: true },
     harvestDate: { type: Date, required: true },
     location: { type: String, required: true },
-
     images: [{ 
         name: String,
         desc:String,
@@ -34,10 +33,10 @@ const batchSchema = new mongoose.Schema({
             "Created",
             "Listed",
             "Bidding",
+            "InTransaction",
             "SoldToDistributor",
             "ListedForRetailers",
-            "SoldToRetailer",
-            "Completed",
+            "Finished",
         ],
         default: "Created",
     },
@@ -53,12 +52,22 @@ const batchSchema = new mongoose.Schema({
         closingDate:{type:Date},
         bids:[
             {
-                user:{ type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                distributorId:{ type: mongoose.Schema.Types.ObjectId, ref: "Distributor" },
                 bidPricePerKg: Number,
                 bidDate: Date,
             }
-        ]
+        ],
+        biddingWinner:{ type: mongoose.Schema.Types.ObjectId, ref: "Distributor" }
     },
+    availableQuantity: { type: Number, required: true },
+    retailOrders: [
+        {
+            retailerId: { type: mongoose.Schema.Types.ObjectId, ref: "Retailer" },
+            quantityBought: Number,
+            pricePerKg: Number,
+            purchaseDate: { type: Date, default: Date.now }
+        }
+    ],
     expiryDate: { type: Date },
     additionalDetails:{
         moistureContent:{type:Number},
