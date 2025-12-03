@@ -75,7 +75,7 @@ const registerFarmer = async (req, res) => {
     try {
         const { name, email, password,aadharNumber,phone,role,farmLocation,farmName,crops,govtId} = req.body;
 
-        if (!name || !email || !password || !role) {
+        if (!name || !email || !password || !phone || !role || !aadharNumber) {
             return res
                 .status(400)
                 .json(new ApiError(400, "All fields are required"));
@@ -145,9 +145,10 @@ const registerFarmer = async (req, res) => {
 // https://localhost:8000/api/auth/registerBuyer
 const registerBuyer = async (req, res) => {
     try {
+        console.log(req.body, "registerBuyer")
         const { name, email, password, phone, aadharNumber,role,gstNumber,panNumber,tradeLicenseNumber,businessName,warehouseAddress,storeName,storeAddress} = req.body;
 
-        if (!name || !email || !password || !role || !gstNumber || !panNumber || !tradeLicenseNumber) {
+        if (!name || !email || !password || !phone || !role || !gstNumber || !panNumber || !tradeLicenseNumber) {
             return res
                 .status(400)
                 .json(new ApiError(400, "All fields are required"));

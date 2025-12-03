@@ -22,6 +22,7 @@ const verifyJWT = async (req, res, next) => {
             console.log("Unauthorized: No token provided");
             return res.status(401).json(new ApiError(401, "Unauthorized: No token provided"));
         }
+        console.log("Authorized: User found", user);
 
 		req.user = user;
 

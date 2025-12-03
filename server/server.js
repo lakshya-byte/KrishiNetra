@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 8000;
         initChatSocket(server);
 
         // Start HTTP + Socket.IO server
-        server.listen(PORT, () => {
+        server.listen(PORT, "0.0.0.0",() => {
             console.log(`🚀 Server is listening on port ${PORT}`);
         });
 
@@ -30,3 +30,4 @@ const PORT = process.env.PORT || 8000;
         console.error("❌ Server startup failed:", error);
     }
 })();
+
