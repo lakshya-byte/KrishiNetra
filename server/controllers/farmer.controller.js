@@ -7,11 +7,21 @@ import { Distributor } from "../models/distributor.model.js";
 
 // http://localhost:8000/api/farmer/create-batch
 const createBatch = async (req, res) => {
-    const {batchId, cropType, quantity, pricePerKg,harvestDate,location,images} = req.body;
+    const {
+        batchId,
+        cropType,
+        quantity,
+        pricePerKg,
+        harvestDate,
+        location,
+        additionalDetails,
+        images
+    } = req.body;
 
     if(!batchId || !cropType || !quantity || !harvestDate){
         return res.status(400).json(new ApiError(400, "All fields are required"));
     }
+
     console.log(req.user);
     try {
         const farmer = await Farmer.findOne({ userId: req.user._id });
@@ -38,6 +48,7 @@ const createBatch = async (req, res) => {
                     updatedAt: Date.now()
                 }
             ],
+            additionalDetails :additionalDetails || {},
             rating:{
                 overall:0
             }
@@ -46,6 +57,7 @@ const createBatch = async (req, res) => {
         return res.status(201).json(new ApiResponse(201, newBatch, "Batch created successfully"));
     } catch (error) {
         return res.status(500).json(new ApiError(500, "Internal Server Error"));
+        console.log(error);
     }
 };
 
@@ -64,26 +76,31 @@ const getMyBatches = async (req, res) => {
     }
 
 };
-// http://localhost:8000/api/farmer/enlist-batch'
-const enlistBatch = async(req,res) => {
-    try{
+
+// POST http://localhost:8000/api/farmer/enlist-batch
+const enlistBatch = async (req, res) => {
+    try {
         const farmer = await Farmer.findOne({ userId: req.user._id });
         if (!farmer) {
-            return res.status(404).json(new ApiError(404, "Farmer not found"));
-        } 
-        const {id} = req.body;
-        const batch = await Batch.findOne({_id:id, farmerId:farmer._id});
-        if(!batch){
-            return res.status(404).json(new ApiError(404, "Batch not found"));
+            return res.status(404).json({ message: "Farmer not found" });
+        }
+        const { id} = req.body;
+        console.log(id)
+        const batch = await Batch.findOne({ _id: id, farmerId: farmer._id });
+        if (!batch) {
+            return res.status(404).json({ message: "hi everyone" });
         }
         batch.status = "Listed";
         await batch.save();
-        return res.status(200).json(new ApiResponse(200, batch, "Batch enlisted successfully"));
-    }catch(err){
+        return res.status(200).json({
+            message: "Batch enlisted successfully",
+            data: batch
+        });
+    } catch (err) {
         console.log("Error occured", err);
-        return res.status(500).json(new ApiError(500, "Internal Server Error"));
+        return res.status(500).json({ message: "Internal Server Error" });
     }
-}
+};
 
 // http://localhost:8000/api/farmer/start-bidding
 const startBidding = async(req,res) => {

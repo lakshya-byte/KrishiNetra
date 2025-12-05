@@ -1,15 +1,19 @@
-import { Distributor } from "../models/distributor.model.js";
-import { Batch } from "../models/batch.model.js";
-import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
+import {Distributor} from "../models/distributor.model.js";
+import {Batch} from "../models/batch.model.js";
+import {ApiError} from "../utils/ApiError.js";
+import {ApiResponse} from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 
 // https://localhost:8000/api/distributor/all-batches
 const getAllBatches = async (req, res) => {
-    try{
-        const batches = await Batch.find({status: { $in: ["Listed", "Bidding"] }});
-
+    try {
+        const batches = await Batch.find({
+            status: {
+                $in: ["Listed", "Bidding", "InTransaction", "SoldToDistributor",]
+            }
+        });
         return res.status(200).json(new ApiResponse(200, batches));
-    }catch(err){
+    } catch (err) {
         console.log("Error occured", err);
         return res.status(500).json(new ApiError(500, "Internal Server Error"));
     }
@@ -18,56 +22,63 @@ const getAllBatches = async (req, res) => {
 // https://localhost:8000/api/distributor/batch/:id
 const getBatchById = async (req, res) => {
     const batchId = req.params.id;
-    try{
+    try {
         const batch = await Batch.findById(batchId);
-        if(!batch){
+        if (!batch) {
             return res.status(404).json(new ApiError(404, "Batch not found"));
         }
         return res.status(200).json(new ApiResponse(200, batch));
-    }catch(err){
+    } catch (err) {
         console.log("Error occured", err);
         return res.status(500).json(new ApiError(500, "Internal Server Error"));
     }
 }
 
 // http://localhost:8000/api/distributor/my-batches
-const getMyBatches = async (req,res) => {
-    try{
-        const distributor = await Distributor.findOne({ userId: req.user._id });
+const getMyBatches = async (req, res) => {
+    try {
+        const distributor = await Distributor.findOne({userId: req.user._id});
         if (!distributor) {
             return res.status(404).json(new ApiError(404, "Distributor not found"));
-        } 
+        }
         const batches = await Batch.find({
             $expr: {
                 $eq: [
-                    { $arrayElemAt: ["$tradeHistory.owner", -1] },
+                    {$arrayElemAt: ["$tradeHistory.owner", -1]},
                     distributor.userId
                 ]
             }
         });
-        
+
         return res.status(200).json(new ApiResponse(200, batches, "Batches fetched successfully"));
-    }catch(error){
+    } catch (error) {
         console.error("Error fetching my batches:", error);
         return res.status(500).json(new ApiError(500, "Internal Server Error"));
-    }  
+    }
 }
 
 // http://localhost:8000/api/distributor/place-bid
 const placeBid = async (req, res) => {
-    const { id, bidPricePerKg } = req.body;
+    const {id, bidPricePerKg} = req.body;
 
     if (!id || !bidPricePerKg) {
         return res.status(400).json(new ApiError(400, "Batch ID and bid price are required"));
     }
 
     try {
-        const distributor = await Distributor.findOne({ userId: req.user._id });
+        // const distributor = await Distributor.findOne({userId: req.user._id});
+
+        const distributor = await Distributor.findOne({
+            userId: new mongoose.Types.ObjectId(req.user._id)
+        });
+
+        console.log(distributor, "distributor found")
         if (!distributor) {
             return res.status(404).json(new ApiError(404, "Distributor not found"));
         }
 
         const batch = await Batch.findById(id);
+        console.log(batch, "batch found")
         if (!batch) {
             return res.status(404).json(new ApiError(404, "Batch not found"));
         }
@@ -79,10 +90,11 @@ const placeBid = async (req, res) => {
         if (batch.bidding.closingDate && new Date() > new Date(batch.bidding.closingDate)) {
             batch.bidding.status = "Closed";
             await batch.save();
-
+            console.log( "batch.bidding.closingDate")
             return res.status(400).json(
                 new ApiError(400, "Bidding is closed for this batch due to expiry")
             );
+
         }
 
         // const alreadyBid = batch.bidding.bids.some(
@@ -100,8 +112,10 @@ const placeBid = async (req, res) => {
             bidPricePerKg: bidPricePerKg,
             bidDate: Date.now(),
         });
+        console.log(batch.bidding.bids, "batch.bidding.bids")
 
         await batch.save();
+
 
         return res
             .status(200)
@@ -114,9 +128,9 @@ const placeBid = async (req, res) => {
 };
 
 const EnlistForRetailers = async (req, res) => {
-    const {id,pricePerKg} = req.body;
+    const {id, pricePerKg} = req.body;
     try {
-        const distributor = await Distributor.findOne({ userId: req.user._id });
+        const distributor = await Distributor.findOne({userId: req.user._id});
         if (!distributor) {
             return res.status(404).json(new ApiError(404, "Distributor not found"));
         }
@@ -134,4 +148,4 @@ const EnlistForRetailers = async (req, res) => {
     }
 };
 
-export { getAllBatches, getBatchById, getMyBatches , placeBid, EnlistForRetailers };
+export {getAllBatches, getBatchById, getMyBatches, placeBid, EnlistForRetailers};

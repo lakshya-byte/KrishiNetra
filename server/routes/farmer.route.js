@@ -13,7 +13,7 @@ router.post("/start-bidding", verifyJWT, startBidding);
 router.post("/stop-bidding", verifyJWT, stopBidding);
 router.post("/complete-transaction", verifyJWT, completeTransaction);
 router.post("/update-batch", verifyJWT, updateBatch);
-
+//
 router.get("/farmer-home", (req, res) => {
     res.send("Welcome to the Farmer Home Page");
 })
