@@ -64,6 +64,7 @@ const batchSchema = new mongoose.Schema({
             retailerId: { type: mongoose.Schema.Types.ObjectId, ref: "Retailer" },
             quantityBought: Number,
             pricePerKg: Number,
+            paymentId: { type: mongoose.Schema.Types.ObjectId, ref: "RetailPayment" },
             purchaseDate: { type: Date, default: Date.now }
         }
     ],

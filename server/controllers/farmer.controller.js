@@ -7,7 +7,7 @@ import { Distributor } from "../models/distributor.model.js";
 
 // http://localhost:8000/api/farmer/create-batch
 const createBatch = async (req, res) => {
-    const {batchId, cropType, quantity, pricePerKg,harvestDate,location} = req.body;
+    const {batchId, cropType, quantity, pricePerKg,harvestDate,location,images} = req.body;
 
     if(!batchId || !cropType || !quantity || !harvestDate){
         return res.status(400).json(new ApiError(400, "All fields are required"));
@@ -28,7 +28,7 @@ const createBatch = async (req, res) => {
             pricePerKg,
             harvestDate,
             location,
-            images:[],
+            images:images || [],
             documents:[],
             status:"Created",
             tradeHistory:[

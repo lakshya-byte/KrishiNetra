@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Heart, ExternalLink, Volume2, VolumeX, MessageCircle, Settings } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { Separator } from '../../ui/separator';
-import { Switch } from '../../ui/switch';
+import { Button } from '../../../ui/button';
+import { Separator } from '../../../ui/separator';
+import { Switch } from '../../../ui/switch';
 import { FarmersHelpChat } from './FarmersHelpChat';
 import { toast } from 'sonner';
 
@@ -296,7 +296,7 @@ export function Footer() {
                       <Phone className="h-4 w-4 animate-pulse" />
                       किसान हेल्पलाइन | Farmer Helpline
                     </h5>
-                    <p className="text-white font-bold text-xl">1800-123-KRISHI</p>
+                    <p className="text-white font-bold text-xl">1800-180-1551</p>
                     <p className="text-xs text-gray-300 mt-1 flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                       24/7 निःशुल्क सहायता उपलब्ध | 24/7 Free Support Available

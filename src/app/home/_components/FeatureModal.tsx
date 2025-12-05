@@ -1,6 +1,6 @@
 import { X, Play } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
+import { Button } from '../../../ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../ui/dialog';
 
 interface FeatureModalProps {
   isOpen: boolean;

@@ -4,6 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Retailer} from "../models/retailer.model.js";
 import { Distributor } from "../models/distributor.model.js";
 import { Farmer } from "../models/farmer.model.js";
+import crypto from "crypto";
+import { RetailPayment } from "../models/retailPayment.model.js";
+import { razorpayInstance } from "../utils/Razorpay.js";
 
 // http://localhost:5000/api/retailer/all-listed-batches
 const getAllListedBatches = async (req, res, next) => {
@@ -35,33 +38,82 @@ const getAllListedBatches = async (req, res, next) => {
 
 // http://localhost:5000/api/retailer/buy-lot
 const buyLot = async (req, res) => {
-    const {id , quantityBought} = req.body;
+    const { id, quantityBought } = req.body;
     const retailerId = req.user.id;
 
     const retailer = await Retailer.findOne({ userId: retailerId });
-    if (!retailer) {
-        return res.status(404).json(new ApiResponse(404, 'Retailer not found'));
-    }
+    if (!retailer) return res.status(404).json(new ApiError(404, "Retailer not found"));
 
     const batch = await Batch.findById(id);
-    if (!batch) {
-        return res.status(404).json(new ApiResponse(404, 'Batch not found'));
-    }
+    if (!batch) return res.status(404).json(new ApiError(404, "Batch not found"));
 
     if (batch.availableQuantity < quantityBought) {
-        return res.status(400).json(new ApiResponse(400, 'Insufficient quantity available'));
+        return res.status(400).json(new ApiError(400, "Insufficient quantity"));
     }
 
-    batch.availableQuantity -= quantityBought;
-    batch.retailOrders.push({
-        retailerId: retailer._id,
-        quantityBought,
-        pricePerKg: batch.pricePerKg,
+    const totalAmount = quantityBought * batch.pricePerKg * 100; 
 
+    // Razorpay order
+    const order = await razorpayInstance.orders.create({
+        amount: totalAmount,
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
     });
+
+    // Save payment record
+    const payment = await RetailPayment.create({
+        retailerId: retailer._id,
+        batchId: batch._id,
+        quantity: quantityBought,
+        totalAmount: totalAmount / 100,
+        razorpayOrderId: order.id,
+        status: "PENDING"
+    });
+
+    res.status(200).json(new ApiResponse(200, "Order initiated", {
+        order,
+        paymentId: payment._id
+    }));
+};
+
+// http://localhost:5000/api/retailer/verify-payment
+const verifyPayment = async (req, res) => {
+    const { paymentId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    const payment = await RetailPayment.findById(paymentId);
+    if (!payment) return res.status(404).json(new ApiError(404, "Payment record not found"));
+
+    const expectedSig = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(razorpay_order_id + "|" + razorpay_payment_id)
+        .digest("hex");
+
+    if (expectedSig !== razorpay_signature) {
+        payment.status = "FAILED";
+        await payment.save();
+        return res.status(400).json(new ApiError(400, "Invalid payment signature"));
+    }
+
+    // Update payment
+    payment.status = "PAID";
+    payment.razorpayPaymentId = razorpay_payment_id;
+    payment.razorpaySignature = razorpay_signature;
+    await payment.save();
+
+    // UPDATE BATCH NOW
+    const batch = await Batch.findById(payment.batchId);
+    batch.availableQuantity -= payment.quantity;
+    batch.retailOrders.push({
+        retailerId: payment.retailerId,
+        quantityBought: payment.quantity,
+        pricePerKg: batch.pricePerKg,
+        paymentId: payment._id,
+        purchaseDate: new Date()
+    });
+
     await batch.save();
-    res.status(200).json(new ApiResponse(200, 'Batch purchased successfully', batch));
-}; 
+
+    res.status(200).json(new ApiResponse(200, "Payment verified & purchase complete"));
+};
 
 // http://localhost:5000/api/retailer/my-batches
 const getMyBatches = async (req, res) => {
@@ -100,4 +152,4 @@ const orderHistory = async (req, res) => {
     res.status(200).json(new ApiResponse(200, 'Orders retrieved successfully', detailedOrders));
 };
 
-export { getAllListedBatches, buyLot,getMyBatches, orderHistory };
+export { getAllListedBatches, buyLot, verifyPayment, getMyBatches, orderHistory };

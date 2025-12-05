@@ -23,7 +23,7 @@ export function Header() {
     { name: 'Home', href: '#home' },
     { name: 'About', href: '#about' },
     { name: 'Scan & Trace', href: '#scan' },
-    { name: 'Login/Signup', href: '#auth' },
+    { name: 'Login/Signup', href: '/auth' },
   ];
 
   return (

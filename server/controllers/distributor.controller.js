@@ -6,7 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 // https://localhost:8000/api/distributor/all-batches
 const getAllBatches = async (req, res) => {
     try{
-        const batches = await Batch.find({status:"Listed"});
+        const batches = await Batch.find({status: { $in: ["Listed", "Bidding"] }});
 
         return res.status(200).json(new ApiResponse(200, batches));
     }catch(err){

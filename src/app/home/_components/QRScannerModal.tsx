@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { X, Camera, AlertCircle, CheckCircle, Scan } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
-import { Alert, AlertDescription } from '../../ui/alert';
+import { Button } from '../../../ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../ui/dialog';
+import { Alert, AlertDescription } from '../../../ui/alert';
 import { toast } from 'sonner';
 
 interface QRScannerModalProps {

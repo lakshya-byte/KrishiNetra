@@ -34,7 +34,7 @@
     "**/*.mts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "server/utils/Cloudinary.js"  ],
   "exclude": [
     "node_modules"
   ]
