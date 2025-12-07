@@ -1,3 +1,4 @@
+'use client';
 import { Package, IndianRupee, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 

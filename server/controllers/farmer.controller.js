@@ -56,8 +56,8 @@ const createBatch = async (req, res) => {
 
         return res.status(201).json(new ApiResponse(201, newBatch, "Batch created successfully"));
     } catch (error) {
-        return res.status(500).json(new ApiError(500, "Internal Server Error"));
         console.log(error);
+        return res.status(500).json(new ApiError(500, "Internal Server Error"));
     }
 };
 
@@ -85,10 +85,10 @@ const enlistBatch = async (req, res) => {
             return res.status(404).json({ message: "Farmer not found" });
         }
         const { id} = req.body;
-        console.log(id)
+        console.log(req.body,farmer._id);
         const batch = await Batch.findOne({ _id: id, farmerId: farmer._id });
         if (!batch) {
-            return res.status(404).json({ message: "hi everyone" });
+            return res.status(404).json({ message: "Batch not Found" });
         }
         batch.status = "Listed";
         await batch.save();

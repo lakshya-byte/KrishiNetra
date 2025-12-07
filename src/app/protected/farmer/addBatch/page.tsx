@@ -1,23 +1,22 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Upload, MapPin, Check, UploadIcon, XIcon } from 'lucide-react';
-import { apiClient } from '@/service/api';
+import { apiClient, POST_CREATE_BATCH } from '@/service/api';
 
-interface AddBatchProps {
-    onComplete: () => void;
-}
-
-export default function AddBatch({ onComplete }: AddBatchProps) {
+export default function AddBatch() {
     const maxImages = 5;
     const maxSizeMB = 5;
     const bytesLimit = maxSizeMB * 1024 * 1024;
 
     const inputRef = useRef(null);
-    const [files, setFiles] = useState([]); 
+    const [files, setFiles] = useState([]);
     const [previews, setPreviews] = useState([]); // {id, src, name}
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState("");
     const [uploadedUrls, setUploadedUrls] = useState([] as string[]); // URLs returned from backend
     const [step, setStep] = useState(1);
+
     // const [showSuccess, setShowSuccess] = useState(false);
     const [formData, setFormData] = useState({
         cropType: '',
@@ -27,7 +26,12 @@ export default function AddBatch({ onComplete }: AddBatchProps) {
         quality: '',
         price: '',
         harvestDate: '',
-        location: '',
+        location: {
+            village:'',
+            district:'',
+            state:'',
+            pin:''
+        },
         images: [] as string[],
     });
 
@@ -57,7 +61,7 @@ export default function AddBatch({ onComplete }: AddBatchProps) {
         };
     }, [files]);
 
-    function validateAndAppend(newFiles:any[]) {
+    function validateAndAppend(newFiles: any[]) {
         setError("");
         const curCount = previews.length + uploadedUrls.length;
         const allowedCount = maxImages - curCount;
@@ -115,13 +119,16 @@ export default function AddBatch({ onComplete }: AddBatchProps) {
             const fd = new FormData();
             files.forEach((f) => fd.append("images", f));
 
+            console.log(files);
             // NOTE: your backend endpoint should accept `images` multipart and return { urls: [..] }
-            const res = await apiClient.post("/upload/upload-images", fd);
-
+            const res = await apiClient.post("/upload/upload-images", fd, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
             if (!res) {
                 throw new Error("Upload failed");
             }
             console.log("Upload response:", res);
+            setUploadedUrls((s) => [...s, ...res.data.message.urls]); 
             setFiles([]);
         } catch (err) {
             console.error(err);
@@ -131,8 +138,27 @@ export default function AddBatch({ onComplete }: AddBatchProps) {
         }
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+        const batchId = Math.floor(Math.random() * 1000000); // Temporary batch ID generation
+        try {
+            const payload = {
+                batchId:batchId,
+                cropType: formData.cropType === 'other' ? formData.otherCropType : formData.cropType,
+                quantity: `${formData.quantity}`,
+                pricePerKg: formData.price,
+                harvestDate: formData.harvestDate,
+                location:`${formData.location.village}, ${formData.location.district}, ${formData.location.state} - ${formData.location.pin}`,
+                additionalDetails: {
+                    quality: formData.quality
+                },
+                images: uploadedUrls
+            }
 
+            const res = await apiClient.post(POST_CREATE_BATCH,payload);
+            console.log("Batch creation response:", res);
+        }catch(err){
+            console.log(err);
+        }
 
     };
 
@@ -379,7 +405,7 @@ export default function AddBatch({ onComplete }: AddBatchProps) {
                         <h2 className="text-[#0F1419]">Location & Harvest Details</h2>
 
                         {/* Map Picker */}
-                        <div>
+                        {/* <div>
                             <label className="block text-[#0F1419] text-sm mb-2">Farm Location</label>
                             <div className="h-64 bg-gray-200 rounded-xl flex items-center justify-center mb-3">
                                 <div className="text-center">
@@ -391,55 +417,87 @@ export default function AddBatch({ onComplete }: AddBatchProps) {
                                 <MapPin className="w-4 h-4" />
                                 Use Current Location
                             </button>
-                        </div>
+                        </div> */}
 
                         {/* Address Fields */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            {/* Village / Town */}
                             <div>
                                 <label className="block text-[#0F1419] text-sm mb-2">Village/Town</label>
                                 <input
                                     type="text"
                                     placeholder="Enter village/town"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#2D7A3E] focus:ring-2 focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
+                                    value={formData.location.village}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            location: { ...formData.location, village: e.target.value },
+                                        })
+                                    }
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:border-[#2D7A3E] focus:ring-2 
+                       focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
                                 />
                             </div>
+
+                            {/* District */}
                             <div>
                                 <label className="block text-[#0F1419] text-sm mb-2">District</label>
                                 <input
                                     type="text"
                                     placeholder="Enter district"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#2D7A3E] focus:ring-2 focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
+                                    value={formData.location.district}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            location: { ...formData.location, district: e.target.value },
+                                        })
+                                    }
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:border-[#2D7A3E] focus:ring-2 
+                       focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
                                 />
                             </div>
+
+                            {/* State */}
                             <div>
                                 <label className="block text-[#0F1419] text-sm mb-2">State</label>
                                 <input
                                     type="text"
                                     placeholder="Enter state"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#2D7A3E] focus:ring-2 focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
+                                    value={formData.location.state}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            location: { ...formData.location, state: e.target.value },
+                                        })
+                                    }
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:border-[#2D7A3E] focus:ring-2 
+                       focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
                                 />
                             </div>
+
+                            {/* PIN Code */}
                             <div>
                                 <label className="block text-[#0F1419] text-sm mb-2">PIN Code</label>
                                 <input
                                     type="text"
                                     placeholder="Enter PIN code"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#2D7A3E] focus:ring-2 focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
+                                    value={formData.location.pin}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            location: { ...formData.location, pin: e.target.value },
+                                        })
+                                    }
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:border-[#2D7A3E] focus:ring-2 
+                       focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
                                 />
                             </div>
-                        </div>
 
-                        {/* Harvest Method */}
-                        <div>
-                            <label className="block text-[#0F1419] text-sm mb-2">Harvest Method</label>
-                            <div className="space-y-2">
-                                {['Hand-picked', 'Mechanized', 'Semi-mechanized'].map((method) => (
-                                    <label key={method} className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                        <input type="checkbox" className="w-4 h-4 text-[#2D7A3E] rounded" />
-                                        <span className="text-[#0F1419]">{method}</span>
-                                    </label>
-                                ))}
-                            </div>
                         </div>
                     </div>
                 )}

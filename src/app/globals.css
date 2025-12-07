@@ -230,9 +230,9 @@ html {
 .border-forest-green { border-color: var(--color-forest-green); }
 
 /* Hover states */
-.hover\:bg-saffron-dark:hover { background-color: var(--color-saffron-dark); }
+/* .hover\:bg-saffron-dark:hover { background-color: var(--color-saffron-dark); }
 .hover\:bg-ashoka-blue-dark:hover { background-color: var(--color-ashoka-blue-dark); }
-.hover\:bg-forest-green-dark:hover { background-color: var(--color-forest-green-dark); }
+.hover\:bg-forest-green-dark:hover { background-color: var(--color-forest-green-dark); } */
 
 .bg-saffron-light { background-color: var(--color-saffron-light); }
 .bg-ashoka-blue-light { background-color: var(--color-ashoka-blue-light); }
@@ -380,3 +380,10 @@ html {
 .animate-celebrate {
     animation: celebrate 0.8s ease-in-out;
 }
+
+@keyframes spin-slow {
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 1.8s linear infinite;
+  }

@@ -3,6 +3,7 @@
 import { useContext, useEffect } from "react";
 import { AuthContext } from "@/context/AuthProvider";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function ProtectedLayout({ children }) {
 	const { user, loading } = useContext(AuthContext);
@@ -10,11 +11,17 @@ export default function ProtectedLayout({ children }) {
 
 	useEffect(() => {
 		if (!loading && !user) {
+            toast.error("Please log in to access this page.");
 			router.replace("/auth");
 		}
+
 	}, [loading, user]);
 
-	if (loading || !user) return null;
+    if(loading){
+        return <div className="flex items-center justify-center h-screen">
+            <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+        </div>
+    }
 
 	return <div className="protected-container">{children}</div>;
 }

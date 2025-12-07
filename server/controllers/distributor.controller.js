@@ -22,6 +22,7 @@ const getAllBatches = async (req, res) => {
 // https://localhost:8000/api/distributor/batch/:id
 const getBatchById = async (req, res) => {
     const batchId = req.params.id;
+    
     try {
         const batch = await Batch.findById(batchId);
         if (!batch) {

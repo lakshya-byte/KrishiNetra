@@ -15,6 +15,7 @@ export default function AuthProvider({ children }) {
 
     useEffect(() => {
         const getMyUser = async() => {
+            console.log("Fetching user data...");
             try{
                 const res = await apiClient.get(GET_ME);
                 console.log("Res",res);
@@ -37,7 +38,7 @@ export default function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={{ user, setUser, loading }}>
-            {children}
+            {!loading && children}
         </AuthContext.Provider>
     );
 }

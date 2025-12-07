@@ -101,11 +101,11 @@ const Login = () => {
             }
             const res = await apiClient.post(POST_LOGIN, payload);
             if(res.data.data.user.role === "Farmer"){
-                router.replace("/protected/farmer");
+                router.replace("/protected/farmer/dashboard");
             }else if(res.data.data.role === "Distributor"){
-                router.replace("/distributor/dashboard");
+                router.replace("/protected/distributor/dashboard");
             }else if(res.data.data.role === "Retailer"){
-                router.replace("/retailer/dashboard");
+                router.replace("/protected/retailer/dashboard");
             }
             toast.success("Login successful!");
         }catch(err){

@@ -7,23 +7,25 @@ import Signup from "./_components/Signup";
 import Login from './_components/Login';
 import { AuthContext } from '@/context/AuthProvider';
 import { useRouter } from 'next/navigation';
+import { toast } from "react-hot-toast";
 
 export default function KrishiNetraAuth() {
-    const {user,loading} = useContext(AuthContext);
+    const { user, loading } = useContext(AuthContext);
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
-   useEffect(() => {
-         if(!loading && user){
-            if(user.userId.role === 'Farmer'){
-                router.replace('/protected/farmer');
-            }else if(user.userId.role === 'Distributor'){
-                router.replace('/distributor/dashboard');
-            }else if(user.userId.role === 'Retailer'){
-                router.replace('/retailer/dashboard');
+    useEffect(() => {
+        if (!loading && user) {
+            toast.success(`Welcome back, ${user.userId.name.split(' ')[0]}!`);
+            if (user.userId.role === 'Farmer') {
+                router.replace('/protected/farmer/dashboard');
+            } else if (user.userId.role === 'Distributor') {
+                router.replace('/protected/distributor/dashboard');
+            } else if (user.userId.role === 'Retailer') {
+                router.replace('/protected/retailer/dashboard');
             }
-         }
-   }, [loading, user]);
+        }
+    }, [loading, user]);
 
     return (
         <div className="min-h-screen bg-white flex">
@@ -99,8 +101,8 @@ export default function KrishiNetraAuth() {
                                 <button
                                     onClick={() => setActiveTab('login')}
                                     className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 ${activeTab === 'login'
-                                            ? 'bg-white shadow-sm text-orange-600'
-                                            : 'text-gray-600 hover:text-gray-900'
+                                        ? 'bg-white shadow-sm text-orange-600'
+                                        : 'text-gray-600 hover:text-gray-900'
                                         }`}
                                 >
                                     Login
@@ -108,8 +110,8 @@ export default function KrishiNetraAuth() {
                                 <button
                                     onClick={() => setActiveTab('signup')}
                                     className={`flex-1 py-2 px-4 rounded-md transition-all duration-200 ${activeTab === 'signup'
-                                            ? 'bg-white shadow-sm text-orange-600'
-                                            : 'text-gray-600 hover:text-gray-900'
+                                        ? 'bg-white shadow-sm text-orange-600'
+                                        : 'text-gray-600 hover:text-gray-900'
                                         }`}
                                 >
                                     Sign Up

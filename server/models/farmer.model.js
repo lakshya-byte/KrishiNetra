@@ -11,8 +11,6 @@ const farmerSchema = new mongoose.Schema(
 		farmName: String,
 		farmLocation: [
 			{
-				lat: Number,
-				lng: Number,
 				address: String,
 				landSize: Number,
 			},

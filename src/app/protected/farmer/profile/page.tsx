@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { Camera, Edit, Phone, Mail, MapPin, Award, Calendar, Globe, Bell, Lock, LogOut } from 'lucide-react';
 import { useContext, useEffect } from "react";
@@ -39,7 +41,7 @@ export default function Profile() {
           )}
         </div>
         <h2 className="text-[#0F1419] mb-1">{user.userId.name}</h2>
-        <p className="text-[#666666] text-sm mb-3">Farmer since {user.createdAt.Year()}</p>
+        <p className="text-[#666666] text-sm mb-3">Farmer since {new Date(user.createdAt).getFullYear()}</p>
         <div className="flex items-center justify-center gap-2">
           <div className="flex">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -105,7 +107,7 @@ export default function Profile() {
                   />
                 ) : (
                   <div className="text-[#0F1419]">
-                    {user.farmLocation[0].address}
+                    {user.farmLocation[0]?.address}
                   </div>
                 )}
               </div>

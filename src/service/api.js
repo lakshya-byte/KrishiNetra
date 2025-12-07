@@ -32,7 +32,7 @@ export const POST_UPDATE_BATCH = `${FARMER_ROUTE}/update-batch`;
 
 // DISTRIBUTOR
 export const GET_ALL_BATCHES = `${DISTRIBUTOR_ROUTE}/all-batches`;
-export const GET_BATCH_BY_ID = `${DISTRIBUTOR_ROUTE}/batch/:id`;
+export const GET_BATCH_BY_ID = `${DISTRIBUTOR_ROUTE}/batch`;
 export const GET_DISTRIBUTOR_BATCHES = `${DISTRIBUTOR_ROUTE}/my-batches`;
 export const POST_PLACE_BID = `${DISTRIBUTOR_ROUTE}/place-bid`;
 export const POST_ENLIST_FOR_RETAILER = `${DISTRIBUTOR_ROUTE}/enlist-for-retailers`

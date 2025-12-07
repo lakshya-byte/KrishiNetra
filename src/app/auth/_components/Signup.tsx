@@ -214,7 +214,7 @@ const Signup = () => {
                     govtId: formData.govtId
                 };
                 const res = await apiClient.post(POST_REGISTER_FARMER, payload);
-                router.push('/protected/farmer');
+                router.push('/protected/farmer/dashboard');
                 console.log("Signup successful:", res.data);
             }else if (tab === "Distributor") {
                 // Handle Distributor signup
@@ -232,7 +232,7 @@ const Signup = () => {
                     warehouseAddress: formData.warehouseAddress
                 };
                 const res = await apiClient.post(POST_REGISTER_BUYER, payload);
-                router.push('/protected/distributor');
+                router.push('/protected/distributor/dashboard');
                 console.log("Signup successful:", res.data);
             }else if (tab === "Retailer") {
                 const payload ={
@@ -249,7 +249,7 @@ const Signup = () => {
                     storeAddress: formData.storeAddress
                 };
                 const res = await apiClient.post(POST_REGISTER_BUYER, payload);
-                router.push('/protected/retailer');
+                router.push('/protected/retailer/dashboard');
                 console.log("Signup successful:", res.data);
             }
             toast.success("Signup successful!");

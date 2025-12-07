@@ -16,11 +16,7 @@ const batchSchema = new mongoose.Schema({
         pricePerKg: { type: Number, required: true },
         harvestDate: { type: Date, required: true },
         location: { type: String, required: true },
-        images: [{
-            name: String,
-            desc:String,
-            url:String
-        }],
+        images: [String],
         documents: [{
             name: String,
             desc:String,
