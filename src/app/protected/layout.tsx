@@ -13,7 +13,8 @@ export default function ProtectedLayout({ children }) {
 	useEffect(() => {
 		if (!loading && !user) {
             toast.error("Please log in to access this page.");
-			router.replace("/auth");
+            router.push("/auth");
+            router.refresh();
 		}
 	}, [loading, user]);
 

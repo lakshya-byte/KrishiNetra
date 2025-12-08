@@ -22,7 +22,7 @@ export default function AuthProvider({ children }) {
                 setUser(res.data.data);
             }catch(err){
                 setUser(null);
-                console.error("Error:",err.response.data);
+                console.log("Error:",err?.response?.data);
             }finally{
                 setLoading(false);
             }

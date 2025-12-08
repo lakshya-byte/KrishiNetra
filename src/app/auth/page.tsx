@@ -1,6 +1,6 @@
 "use client"
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from './_components/ImageWithFallback';
 import Signup from "./_components/Signup";
@@ -10,20 +10,23 @@ import { useRouter } from 'next/navigation';
 import { toast } from "react-hot-toast";
 
 export default function KrishiNetraAuth() {
+    const effectRan = useRef(false);
     const { user, loading,setUser } = useContext(AuthContext);
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
     useEffect(() => {
+        if(effectRan.current) return;
         if (!loading && user) {
-            toast.success(`Welcome back, ${user.userId.name.split(' ')[0]}!`);
-            if (user.userId.role === 'Farmer') {
+            toast.success(`Welcome back, ${user.userId?.name.split(' ')[0]}!`);
+            if (user.userId?.role === 'Farmer') {
                 router.replace('/protected/farmer/dashboard');
-            } else if (user.userId.role === 'Distributor') {
+            } else if (user.userId?.role === 'Distributor') {
                 router.replace('/protected/distributor/dashboard');
-            } else if (user.userId.role === 'Retailer') {
+            } else if (user.userId?.role === 'Retailer') {
                 router.replace('/protected/retailer/dashboard');
             }
+            effectRan.current = true;
         }
     }, [loading, user]);
 

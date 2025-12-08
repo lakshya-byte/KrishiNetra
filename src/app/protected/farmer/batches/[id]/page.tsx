@@ -42,7 +42,7 @@ import { set } from 'date-fns';
 import Spinner from "@/app/components/Spinner";
 // Mock data for the batch
 const batchData = {
-    id:"DLFSDfljdlfjsdlkfjlsdkfj",
+    id: "DLFSDfljdlfjsdlkfjlsdkfj",
     batchId: 'BT-2024-001',
     cropType: 'Wheat',
     quantity: '500 kg',
@@ -197,7 +197,7 @@ const comments = [
 // Main App Component
 export default function App() {
     const [activeTab, setActiveTab] = useState('details');
-    const [loading , setLoading] = useState(true); 
+    const [loading, setLoading] = useState(true);
     const effectRan = useRef(false);
     const { user } = useContext(AuthContext);
     const { id } = useParams();
@@ -205,10 +205,13 @@ export default function App() {
     const [viewEnlistBatchModal, setViewEnlistBatchModal] = useState(false);
     const [batchData, setBatchData] = useState({} as any);
     const [viewBiddingForm, setViewBiddingForm] = useState(false);
-    const [closingDate, setClosingDate] = useState('');
+    const [biddingForm, setbiddingForm] = useState({
+        biddingDuration: '',
+        unit: ''
+    });
 
     useEffect(() => {
-        if(effectRan.current) return;
+        if (effectRan.current) return;
         const fetchBatchData = async () => {
             try {
                 const res = await apiClient.get(`${GET_BATCH_BY_ID}/${id}`);
@@ -217,7 +220,7 @@ export default function App() {
                 toast.success('Batch data fetched successfully!');
             } catch (error) {
                 console.error('Failed to fetch batch data:', error);
-            }finally {
+            } finally {
                 setLoading(false);
             }
         };
@@ -244,14 +247,14 @@ export default function App() {
         toast.success('QR Code downloaded successfully!');
     };
 
-    const handleEnlistBatch = async() => {
-        try{
+    const handleEnlistBatch = async () => {
+        try {
             console.log(batchData)
             const payload = {
-                id:batchData._id,
+                id: batchData._id,
             }
             const res = await apiClient.post(POST_ENLIST_BATCH, payload);
-            if(res.data.status === 200){
+            if (res.data.status === 200) {
                 toast.success('Batch enlisted successfully!');
             } else {
                 toast.error('Failed to enlist batch.');
@@ -259,25 +262,54 @@ export default function App() {
         } catch (error) {
             toast.error('An error occurred while enlisting the batch.');
             console.log(error);
-        }finally {
+        } finally {
             setViewEnlistBatchModal(false);
         }
     }
 
-    const handleStartBidding = async() => {
-        const payload = {
-            id:batchData._id,
-            closingDate:closingDate
+    const handleStartBidding = async () => {
+        const now = new Date();
+
+        let endTime = new Date(now);
+
+        if (biddingForm.unit === "hours") {
+            endTime.setHours(endTime.getHours() + Number(biddingForm.biddingDuration));
+        } else {
+            endTime.setDate(endTime.getDate() + Number(biddingForm.biddingDuration));
         }
-        try{
+        const payload = {
+            id: batchData._id,
+            closingDate: endTime
+        }
+        try {
             const res = await apiClient.post(POST_START_BIDDING, payload);
             console.log(res);
-        }catch(error){
+            toast.success('Bidding started successfully!');
+            setBatchData({ ...batchData, status: 'bidding' });
+            setViewBiddingForm(false);
+        } catch (error) {
             console.log(error);
         }
     }
-    if(loading){
-        return(
+
+    function getTimeRemaining(closingDate) {
+        const now = new Date();
+        const end = new Date(closingDate);
+    
+        const diff = end.getTime() - now.getTime(); // milliseconds
+        
+        if (diff <= 0) {
+            return "expired";
+        }
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+    
+        return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }    
+    if (loading) {
+        return (
             <div className="min-h-screen flex justify-center items-center">
                 <Spinner />
             </div>
@@ -286,20 +318,20 @@ export default function App() {
 
     return (
         <div className="min-h-screen">
-                <div className="flex justify-end items-center space-x-2">
-                    <Button variant="outline" size="sm">
-                        <Edit3 className="h-4 w-4 mr-2" />
-                        Edit
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        QR
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share
-                    </Button>
-                </div>
+            <div className="flex justify-end items-center space-x-2">
+                <Button variant="outline" size="sm">
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Edit
+                </Button>
+                <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    QR
+                </Button>
+                <Button variant="outline" size="sm">
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                </Button>
+            </div>
             <main className="container mx-auto px-4 py-6 space-y-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -331,7 +363,7 @@ export default function App() {
                                             <Calendar className="h-4 w-4 text-muted-foreground" />
                                             <div>
                                                 <p className="text-sm text-muted-foreground">Harvest Date</p>
-                                                <p className="font-medium">{batchData.harvestDate}</p>
+                                                <p className="font-medium">{toReadable(batchData.harvestDate)}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center space-x-2">
@@ -379,29 +411,29 @@ export default function App() {
                         </div>
                         <div className='flex flex-wrap gap-4 mt-4'>
                             {batchData.status === 'Created' &&
-                                <button 
+                                <button
                                     onClick={() => setViewEnlistBatchModal(true)}
                                     className='flex items-center gap-2 px-4 py-2 border-[#F57C00] border-2 rounded-lg text-[#F57C00] cursor-pointer hover:bg-[#F57C00] hover:text-white transition-all duration-150'>
                                     <Check className='h-4 w-4' />
                                     <p>Enlist Batch</p>
                                 </button>
-                            }   
-                            {viewEnlistBatchModal && 
-                            <div className='fixed z-50 w-screen h-screen top-0 left-0 bg-[rgba(0,0,0,0.5)] flex justify-center items-center'>
-                                <div className='bg-white rounded-lg p-6'>
-                                    <h2 className='text-xl font-semibold mb-4'>Confirm Enlist Batch</h2>
-                                    <p>Are you sure you want to enlist this batch on the marketplace?</p>
-                                    <button 
-                                        className='mt-3 py-2 px-4 border-[#F57C00] border-2 rounded-lg text-[#F57C00] cursor-pointer hover:bg-[#F57C00] hover:text-white transition-all duration-150' 
-                                        onClick={() => handleEnlistBatch()}>Confirm</button>
-                                    <button 
-                                        onClick={() => setViewEnlistBatchModal(false)} 
-                                        className='py-2 px-4 border-gray-600 border-2 rounded-lg text-gray-700 cursor-pointer hover:bg-gray-800 hover:text-white transition-all duration-150 ml-4'>Cancel</button>
-                                </div>
-                            </div>
                             }
-                            {(batchData.status === 'Listed' && !viewBiddingForm)  &&
-                                <button 
+                            {viewEnlistBatchModal &&
+                                <div className='fixed z-50 w-screen h-screen top-0 left-0 bg-[rgba(0,0,0,0.5)] flex justify-center items-center'>
+                                    <div className='bg-white rounded-lg p-6'>
+                                        <h2 className='text-xl font-semibold mb-4'>Confirm Enlist Batch</h2>
+                                        <p>Are you sure you want to enlist this batch on the marketplace?</p>
+                                        <button
+                                            className='mt-3 py-2 px-4 border-[#F57C00] border-2 rounded-lg text-[#F57C00] cursor-pointer hover:bg-[#F57C00] hover:text-white transition-all duration-150'
+                                            onClick={() => handleEnlistBatch()}>Confirm</button>
+                                        <button
+                                            onClick={() => setViewEnlistBatchModal(false)}
+                                            className='py-2 px-4 border-gray-600 border-2 rounded-lg text-gray-700 cursor-pointer hover:bg-gray-800 hover:text-white transition-all duration-150 ml-4'>Cancel</button>
+                                    </div>
+                                </div>
+                            }
+                            {(batchData.status === 'Listed' && !viewBiddingForm) &&
+                                <button
                                     onClick={() => setViewBiddingForm(true)}
                                     className='flex items-center gap-2 px-4 py-2 border-[#F57C00] border-2 rounded-lg text-[#F57C00] cursor-pointer hover:bg-[#F57C00] hover:text-white transition-all duration-150'>
                                     <Check className='h-4 w-4' />
@@ -409,29 +441,70 @@ export default function App() {
                                 </button>
                             }
                             {viewBiddingForm &&
-                                <div>
-                                    <h1>Start Bidding</h1>
-                                    <div>
-                                        <label>Enter Closing Date: </label>
-                                        <input
-                                            type="date"
-                                            value={closingDate}
-                                            onChange={(e) => setClosingDate(e.target.value)}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#2D7A3E] focus:ring-2 focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
-                                        />
-                                        <button 
-                                            onClick={() => setViewBiddingForm(true)}
-                                            className='flex items-center gap-2 px-4 py-2 border-[#F57C00] border-2 rounded-lg text-[#F57C00] cursor-pointer hover:bg-[#F57C00] hover:text-white transition-all duration-150'>
+                                <div className='pl-2'>
+                                    <h1 className='text-lg'>Start Bidding</h1>
+                                    <div className='p-4 pl-4'>
+                                        <label>Enter Bidding Duration: </label>
+                                        <div className="flex gap-3">
+                                            <input
+                                                type="number"
+                                                placeholder="Enter duration"
+                                                value={biddingForm.biddingDuration}
+                                                onChange={(e) => setbiddingForm({ ...biddingForm, biddingDuration: e.target.value })}
+                                                className="border p-2 rounded w-32"
+                                            />
+
+                                            <select
+                                                value={biddingForm.unit}
+                                                onChange={(e) => setbiddingForm({ ...biddingForm, unit: e.target.value })}
+                                                className="border p-2 rounded"
+                                            >
+                                                <option value="hours">Hours</option>
+                                                <option value="days">Days</option>
+                                            </select>
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleStartBidding()}
+                                            className='flex items-center gap-2 px-4 mt-4 py-2 border-[#F57C00] border-2 rounded-lg text-[#F57C00] cursor-pointer hover:bg-[#F57C00] hover:text-white transition-all duration-150'>
                                             <Check className='h-4 w-4' />
                                             <p>Start Bidding</p>
                                         </button>
                                     </div>
                                 </div>
                             }
+                            {
+                                (batchData.status === 'Bidding') &&
+                                <div className='flex flex-col md:flex-col gap-4'>
+                                    <div className='pl-2 flex flex-row items-center gap-4'>
+                                        <Badge className='bg-green-100 text-green-800 border-green-200 px-3 py-1'>Ongoing Bidding</Badge>
+                                        <p className='text-sm'>Time Remaining: 
+                                            <span className='font-medium pl-1'>
+                                                {getTimeRemaining(batchData.bidding.closingDate) }
+                                            </span>    
+                                        </p>
+                                    </div>  
+                                    <div className='pl-2'>
+                                        <h1 className='text-xl font-bold'>Bids:</h1>
+                                        {
+                                            batchData.bidding.bids.length > 0 ? 
+                                                <div className='grid grid-cols-1 md:grid-cols-2 gap-4 p-4'>
+                                                {batchData.bidding.bids.map((bid:any, index) => (
+                                                    <div key={index} className='flex flex-col justify-between border border-gray-200 rounded-2xl hover:border-black p-4'>
+                                                            <p className='font-medium'>Bidder: {bid.distributorId}</p>
+                                                            <p className='font-medium'>Bidding Price: {bid.bidPricePerKg}</p>
+                                                            <p className='font-medium'>Placed at: {toReadable(bid.bidDate)}</p>
+                                                    </div>))}
+                                                </div> :
+                                                <p className='text-gray-700 bg-gray-100 p-2 rounded'>No bids placed yet.</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
                     <div>
-                        
+
                     </div>
                 </div>
                 <motion.div
@@ -523,7 +596,7 @@ export default function App() {
                                         </div>
                                     </TabsContent>
 
-                                    <TabsContent value="certifications" className="space-y-4">
+                                    {/* <TabsContent value="certifications" className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {certifications.length > 0 ?
                                                 (certifications.map((cert) => (
@@ -557,7 +630,7 @@ export default function App() {
                                                     <h1>No certificates found.</h1>
                                                 </>}
                                         </div>
-                                    </TabsContent>
+                                    </TabsContent> */}
 
                                     <TabsContent value="pricing" className="space-y-4">
                                         <PriceTransparencyTab />
@@ -572,11 +645,30 @@ export default function App() {
                     </Card>
                 </motion.div>
 
-                <CommentsSection />
+                {/* <CommentsSection /> */}
             </main>
         </div>
     );
 }
+
+const toReadable = (date: string | Date): string => {
+    
+     const d = new Date(date);
+    const day = d.getDate();
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    console.log(day, month, year);
+
+    let hours = d.getHours();
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+
+    const hourStr = hours.toString().padStart(2, "0");
+
+    return `${day}/${month}/${year} • ${hourStr}:${minutes} ${ampm}`;
+};
 
 
 // Timeline Component

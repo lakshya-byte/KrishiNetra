@@ -8,6 +8,7 @@ import { Label } from '@/ui/label';
 import { Switch } from '@/ui/switch';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { set } from 'date-fns';
 
 interface FormData {
     email: string;
@@ -107,6 +108,8 @@ const Login = ({ setUser }: { setUser: (user: any) => void }) => {
             }else if(res.data.data.role === "Retailer"){
                 router.replace("/protected/retailer/dashboard");
             }
+            setUser(res.data.data);
+            console.log(res.data.data);
             toast.success("Login successful!");
         }catch(err){
             console.error(err?.response?.data || err);
