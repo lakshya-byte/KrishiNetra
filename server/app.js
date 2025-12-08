@@ -22,12 +22,14 @@ import userRouter from "./routes/user.route.js";
 import distributorRouter from "./routes/distributor.route.js";
 import retailerRouter from "./routes/retailer.route.js";
 import uploadRouter from "./routes/upload.route.js";
+import adminRouter from "./routes/admin.route.js";
 
 app.use("/api/auth", authRouter);
 app.use("/api/farmer", farmerRouter);
 app.use('/api/user', userRouter);
 app.use("/api/distributor", distributorRouter);
 app.use("/api/retailer", retailerRouter);
+app.use("/api/admin",adminRouter);
 app.use("/api/upload", uploadRouter);
 
 export { app };

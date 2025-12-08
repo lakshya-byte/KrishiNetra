@@ -20,7 +20,7 @@ interface FormErrors {
     password?: string;
 }
 
-const Login = () => {
+const Login = ({ setUser }: { setUser: (user: any) => void }) => {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);

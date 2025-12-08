@@ -275,7 +275,7 @@ export default function App() {
         }catch(error){
             console.log(error);
         }
-
+    }
     if(loading){
         return(
             <div className="min-h-screen flex justify-center items-center">
@@ -415,8 +415,8 @@ export default function App() {
                                         <label>Enter Closing Date: </label>
                                         <input
                                             type="date"
-                                            value={formData.harvestDate}
-                                            onChange={(e) => setFormData({ ...formData, harvestDate: e.target.value })}
+                                            value={closingDate}
+                                            onChange={(e) => setClosingDate(e.target.value)}
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#2D7A3E] focus:ring-2 focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
                                         />
                                         <button 

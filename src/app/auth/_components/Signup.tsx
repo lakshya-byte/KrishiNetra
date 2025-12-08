@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { apiClient, POST_REGISTER_BUYER, POST_REGISTER_FARMER } from '@/service/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { se } from 'date-fns/locale';
 
 interface FormData {
     name: string;
@@ -52,7 +53,7 @@ interface FormErrors {
     storeAddress?: string;
 }
 
-const Signup = () => {
+const Signup = ({setUser}: { setUser: (user: any) => void }) => {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -216,6 +217,7 @@ const Signup = () => {
                 const res = await apiClient.post(POST_REGISTER_FARMER, payload);
                 router.push('/protected/farmer/dashboard');
                 console.log("Signup successful:", res.data);
+                setUser(res.data.user);
             }else if (tab === "Distributor") {
                 // Handle Distributor signup
                 const payload = {

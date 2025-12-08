@@ -1,11 +1,12 @@
 "use client";
 
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { AuthContext } from "@/context/AuthProvider";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 export default function ProtectedLayout({ children }) {
+    const effectRan = useRef(false);
 	const { user, loading } = useContext(AuthContext);
 	const router = useRouter();
 
@@ -14,7 +15,6 @@ export default function ProtectedLayout({ children }) {
             toast.error("Please log in to access this page.");
 			router.replace("/auth");
 		}
-
 	}, [loading, user]);
 
     if(loading){

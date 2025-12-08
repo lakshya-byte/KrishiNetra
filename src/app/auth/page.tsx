@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from "react-hot-toast";
 
 export default function KrishiNetraAuth() {
-    const { user, loading } = useContext(AuthContext);
+    const { user, loading,setUser } = useContext(AuthContext);
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
@@ -118,7 +118,7 @@ export default function KrishiNetraAuth() {
                                 </button>
                             </div>
                         </div>
-                        {activeTab === 'signup' ? <Signup /> : <Login />}
+                        {activeTab === 'signup' ? <Signup setUser={setUser} /> : <Login setUser={setUser} />}
                     </motion.div>
 
                     {/* Footer */}
