@@ -12,7 +12,7 @@ export default function App({children}) {
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
             />
-            <main className="lg:ml-[280px] pt-16">
+            <main className="lg:ml-[280px] ">
                 <div className="p-4 md:p-8">
                     {children}
                 </div>

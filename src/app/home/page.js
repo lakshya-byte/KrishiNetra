@@ -8,7 +8,7 @@ import { Toaster } from "@/ui/sonner";
 export default function App() {
 	return (
 		<div className="min-h-screen font-sans">
-			<Header />
+			{/*<Header />*/}
 
 			<main>
 				<Hero />

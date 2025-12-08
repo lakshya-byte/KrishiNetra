@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Search, Plus, Edit, Eye } from 'lucide-react';
-import { apiClient, GET_FARMER_BATCHES } from '@/service/api';
-import { useRouter } from 'next/navigation';
+import {useEffect, useState} from 'react';
+import {Search, Plus, Edit, Eye} from 'lucide-react';
+import {apiClient, GET_FARMER_BATCHES} from '@/service/api';
+import {useRouter} from 'next/navigation';
 
 export default function Batches() {
     const router = useRouter();
@@ -18,7 +18,7 @@ export default function Batches() {
             const res = await apiClient.get(GET_FARMER_BATCHES);
             console.log(res);
             const data = res.data.data.map((batch: any) => ({
-                id:batch._id,
+                id: batch._id,
                 batchId: batch.batchId,
                 name: batch.cropType,
                 quantity: `${batch.availableQuantity} kg`,
@@ -49,7 +49,7 @@ export default function Batches() {
                     onClick={() => router.replace('/protected/farmer/addBatch')}
                     className="flex items-center gap-2 px-6 py-3 bg-[#E8A314] text-white rounded-lg hover:bg-[#D49014] hover:scale-[1.02] active:scale-[0.98] transition-all duration-150 shadow-sm"
                 >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-5 h-5"/>
                     <span>Add New Batch</span>
                 </button>
             </div>
@@ -66,9 +66,9 @@ export default function Batches() {
                                 className={`
                   px-4 py-2 rounded-lg text-sm transition-all duration-150
                   ${filter === f
-                                        ? 'bg-[#E8A314] text-white shadow-sm'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }
+                                    ? 'bg-[#E8A314] text-white shadow-sm'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }
                 `}
                             >
                                 {f}
@@ -78,7 +78,7 @@ export default function Batches() {
 
                     {/* Search Bar */}
                     <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"/>
                         <input
                             type="text"
                             placeholder="Search batches by crop name..."
@@ -136,12 +136,14 @@ export default function Batches() {
 
                             {/* Action Buttons */}
                             <div className="flex gap-2 pt-2">
-                                <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-[#2D7A3E] text-[#2D7A3E] rounded-lg hover:bg-[#E8F5E9] transition-all duration-150">
-                                    <Eye className="w-4 h-4" />
+                                <button
+                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-[#2D7A3E] text-[#2D7A3E] rounded-lg hover:bg-[#E8F5E9] transition-all duration-150">
+                                    <Eye className="w-4 h-4"/>
                                     <span className="text-sm">View Details</span>
                                 </button>
-                                <button className="flex items-center justify-center px-4 py-2 bg-[#E8A314] text-white rounded-lg hover:bg-[#D49014] transition-all duration-150">
-                                    <Edit className="w-4 h-4" />
+                                <button
+                                    className="flex items-center justify-center px-4 py-2 bg-[#E8A314] text-white rounded-lg hover:bg-[#D49014] transition-all duration-150">
+                                    <Edit className="w-4 h-4"/>
                                 </button>
                             </div>
                         </div>

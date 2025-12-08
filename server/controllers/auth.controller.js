@@ -7,6 +7,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
 	try {
+        // log
 		const user = await User.findById(userId);
 		const accessToken = user.generateAccessToken();
 		const refreshToken = user.generateRefreshToken();
@@ -19,57 +20,96 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
 // http://localhost:8000/api/auth/login
 const loginUser = async (req, res) => {
-	const { email, password } = req.body;
-    console.log("Received login request:", { email, password });
-	if (!email || !password)
-		return res.status(400).json(new ApiError(400, "All fields are required"));
+    try {
 
-	const user = await User.findOne({ email });
-	if (!user) {
-		return res.status(404).json(new ApiError(404, "User not found"));
-	}
+        console.log("login triggered")
+        const { email, password } = req.body;
+        console.log("Received login request:", { email, password });
+        if (!email || !password)
+            return res.status(400).json(new ApiError(400, "All fields are required"));
 
-	const isPasswordCorrect = await user.isPasswordCorrect(password);
-	if (!isPasswordCorrect)
-		return res.status(401).json(new ApiError(401, "Invalid password"));
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json(new ApiError(404, "User not found"));
+        }
 
-	const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-		user._id
-	);
+        const isPasswordCorrect = await user.isPasswordCorrect(password);
+        if (!isPasswordCorrect)
+            return res.status(401).json(new ApiError(401, "Invalid password"));
 
-	const loggedInUser = await User.findById(user._id).select(
-		"-password -refreshToken"
-	);
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+            user._id
+        );
+        console.log("Generated tokens:", { accessToken, refreshToken });
 
-    console.log("Logged in user:", loggedInUser);
+        const loggedInUser = await User.findById(user._id).select(
+            "-password -refreshToken"
+        );
 
-	const options = {
-		secure: true,
-		httpOnly: true,
-		sameSite: "None",
-		maxAge: 24 * 60 * 60 * 1000,
-	};
-	return res
-		.status(200)
-		.cookie("accessToken", accessToken, options)
-		.cookie("refreshToken", refreshToken, options)
-		.json(
-			new ApiResponse(200, { 
-                user: loggedInUser,
-                accessToken,
-                refreshToken
-            }, "User logged in successfully")
-		);
+        console.log("Logged in user:", loggedInUser);
+
+        const options = {
+            secure: true,
+            httpOnly: true,
+            sameSite: "None",
+            maxAge: 24 * 60 * 60 * 1000,
+        };
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(
+                new ApiResponse(200, {
+                    user: loggedInUser,
+                    accessToken,
+                    refreshToken
+                }, "User logged in successfully")
+            );
+    } catch (error) {
+        console.log(error)
+        return res
+            .status(error.statusCode || 500)
+            .json(new ApiError(error.statusCode || 500, error.message));
+    }
 };
 
-// https://localhost:8000/api/auth/logout
-const logoutUser = async (req, res) => {
-    await User.findByIdAndUpdate(req.user._id, { new: true });
-    const options = { secure: true, httpOnly: true, sameSite: "none" };
-    return res.status(200).clearCookie("accessToken", options).clearCookie("refreshToken", options)
-      .json(new ApiResponse(200, {}, "User logged out successfully"));
-};
+// // https://localhost:8000/api/auth/logout
+// const logoutUser = async (req, res) => {
+//     console.log("Received logout request:", req.user);
+//     await User.findByIdAndUpdate(req.user._id, { new: true });
+//     const options = { secure: true, httpOnly: true, sameSite: "none" };
+//     return res.status(200).clearCookie("accessToken", options).clearCookie("refreshToken", options)
+//       .json(new ApiResponse(200, {}, "User logged out successfully"));
+// };
 
+const logoutUser = (async (req, res) => {
+    // 1. Check if req.user exists before accessing ._id
+    if (req.user?._id) {
+        // Optional: clear the refresh token in DB if you are using one
+        await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $unset: { refreshToken: 1 } // Actually remove the token
+            },
+            {
+                new: true
+            }
+        );
+    }
+
+    // 2. Clear cookies regardless of whether we found the user in DB
+    const options = {
+        httpOnly: true,
+        secure: true, // Set to false if testing on localhost HTTP (not HTTPS)
+        sameSite: "none" // Set to "lax" if testing on localhost HTTP
+    };
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User logged out successfully"));
+});
 // https://localhost:8000/api/auth/registerFarmer
 const registerFarmer = async (req, res) => {
     try {

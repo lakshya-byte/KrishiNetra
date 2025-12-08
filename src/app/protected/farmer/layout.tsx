@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Header from './_components/Header';
 import Sidebar from './_components/Sidebar';
 import { ChevronRight, Home } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -13,7 +12,6 @@ export default function App({ children }) {
     const pathname = usePathname().split('/').slice(2);
     return (
         <div className="min-h-screen bg-[#F5F5F5]">
-            <Header onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)} />
             <Sidebar
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}

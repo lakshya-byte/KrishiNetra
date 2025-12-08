@@ -35,6 +35,7 @@ import { Textarea } from '@/ui/textarea';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { AuthContext } from '@/context/AuthProvider';
 import { useParams } from 'next/navigation';
+import {ImageWithFallback} from "@/app/auth/_components/ImageWithFallback";
 
 // Mock data for the batch
 const batchData = {

@@ -1,8 +1,9 @@
 import { Home, Package, Plus, Gavel, Truck, BarChart3, User, Settings, HelpCircle, X, ShoppingBasket } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+
 const navItems = [
     { id: '/dashboard', label: 'Dashboard', icon: Home },
-    { id: '/exploreBatch', label: 'Explore Batches', icon: ShoppingBasket },
+    { id: '/batches', label: 'Explore Batches', icon: ShoppingBasket },
     { id: '/myBatches', label: 'My Batch', icon: Package },
     { id: '/ongoingBidding', label: 'Bidding Batches', icon: Gavel },
     { id: '/profile', label: 'Profile', icon: User },
@@ -47,7 +48,7 @@ export default function Sidebar({ isOpen, onClose }) {
                         return (
                             <button
                                 key={item.id}
-                                onClick={() => router.replace(`/protected/farmer${item.id}`)}
+                                onClick={() => router.replace(`/protected/distributor${item.id}`)}
                                 className={`
                   w-full flex items-center gap-3 px-4 py-3 rounded-lg
                   transition-all duration-150 ease-out
