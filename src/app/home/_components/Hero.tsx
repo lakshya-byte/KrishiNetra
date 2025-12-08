@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { QrCode, ArrowRight, Leaf, Shield, Users, Volume2, Play, Pause } from 'lucide-react';
-import { Button } from '../../../ui/button';
+import { Button } from '@/ui/button';
 import { ImageWithFallback } from './ImageWithFallback';
 import { QRScannerModal } from './QRScannerModal';
 import { toast } from 'sonner';

@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Heart, ExternalLink, Volume2, VolumeX, MessageCircle, Settings } from 'lucide-react';
-import { Button } from '../../../ui/button';
-import { Separator } from '../../../ui/separator';
-import { Switch } from '../../../ui/switch';
+import { Button } from '@/ui/button';
+import { Separator } from '@/ui/separator';
+import { Switch } from '@/ui/switch';
 import { FarmersHelpChat } from './FarmersHelpChat';
 import { toast } from 'sonner';
 

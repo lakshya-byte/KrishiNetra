@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Bot, User, Volume2 } from 'lucide-react';
-import { Button } from '../../../ui/button';
-import { Input } from '../../../ui/input';
-import { ScrollArea } from '../../../ui/scroll-area';
+import { Button } from '@/ui/button';
+import { Input } from '@/ui/input';
+import { ScrollArea } from '@/ui/scroll-area';
 import { toast } from 'sonner';
 
 interface Message {

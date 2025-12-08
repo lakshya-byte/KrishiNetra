@@ -1,5 +1,6 @@
 import { Home, Package, Plus, Gavel, Truck, BarChart3, User, Settings, HelpCircle, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+
 const navItems = [
     { id: '/dashboard', label: 'Dashboard', icon: Home },
     { id: '/batches', label: 'Batches', icon: Package },

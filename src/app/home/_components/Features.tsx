@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Eye, DollarSign, Shield, Leaf, Users, BarChart3, Wheat, ShoppingCart, TrendingUp } from 'lucide-react';
-import { Card, CardContent } from '../../../ui/card';
+import { Card, CardContent } from '@/ui/card';
 import { FeatureModal } from './FeatureModal';
 
 const featuresData = [

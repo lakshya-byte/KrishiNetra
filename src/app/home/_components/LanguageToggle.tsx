@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, Globe } from 'lucide-react';
-import { Button } from '../../../ui/button';
+import { Button } from '@/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '../../../ui/dropdown-menu';
+} from '@/ui/dropdown-menu';
 import { toast } from 'sonner';
 
 const languages = [
