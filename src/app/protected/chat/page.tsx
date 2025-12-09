@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, Phone, Video, MoreVertical, Send, Paperclip,
     Mic, Smile, Image as ImageIcon, ChevronLeft, Check, CheckCheck,
-    Settings, LogOut, Loader2, AlertCircle
+    Settings, LogOut, Loader2, Menu
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/ui/avatar';
 import { Button } from '@/ui/button';
@@ -14,36 +14,41 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from '@/ui/dropdown-menu';
 
-import { useSocket } from "@/context/SocketProviderContext"; // Ensure path is correct
+// Emoji Picker
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+
+import { useSocket } from "@/context/SocketProviderContext";
 import { AuthContext } from "@/context/AuthProvider";
 import { apiClient } from "@/service/api";
 import { toast } from "react-hot-toast";
 
-// --- TYPES ---
+// Types
 type User = { _id: string; name: string; avatar?: string; role: string; email?: string; };
-type Message = { _id?: string; text: string; from: User | string; createdAt: string; roomId: string; status?: string; };
+type Message = { _id?: string; tempId?: string; text: string; from: User | string; createdAt: string; roomId: string; status?: string; };
 
 export default function ChatPage() {
     const { socket, isConnected } = useSocket();
     const { user } = useContext(AuthContext);
 
-    // --- DATA STATE ---
+    // --- Data State ---
     const [usersList, setUsersList] = useState<User[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
 
-    // --- UI STATE ---
+    // --- UI State ---
     const [loadingSidebar, setLoadingSidebar] = useState(true);
     const [loadingChat, setLoadingChat] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [newMessage, setNewMessage] = useState('');
-    const [isMobileView, setIsMobileView] = useState(false);
-    const [showSidebar, setShowSidebar] = useState(true);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+    // Mobile Sidebar Toggle
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // 1. INITIAL SETUP & FETCH USERS
+    // 1. Initial Load
     useEffect(() => {
         const fetchUsers = async () => {
             try {
@@ -53,56 +58,59 @@ export default function ChatPage() {
                 }
             } catch (error) {
                 console.error("Sidebar Error:", error);
-                toast.error("Could not load contacts");
             } finally {
                 setLoadingSidebar(false);
             }
         };
-
         fetchUsers();
-
-        const handleResize = () => {
-            const mobile = window.innerWidth < 768;
-            setIsMobileView(mobile);
-            if (!mobile) setShowSidebar(true);
-        };
-
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // 2. SOCKET LISTENER FOR MESSAGES
+    // 2. Auto-Scroll to bottom when messages change
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    // 3. Socket Listener (The "Live" Part)
     useEffect(() => {
         if (!socket) return;
 
         const handleIncomingMessage = (msg: Message) => {
+            // Security check: Only add if message belongs to current room
             if (activeRoomId && msg.roomId === activeRoomId) {
-                setMessages((prev) => [...prev, msg]);
-                // Scroll to bottom immediately on new message
-                setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                setMessages((prev) => {
+                    // Prevent duplicate messages (optimistic vs server echo)
+                    const exists = prev.some(m =>
+                        (m._id && m._id === msg._id) ||
+                        (m.tempId && m.tempId === msg.tempId) // Check tempId if server echoes it back
+                    );
+                    if (exists) return prev;
+                    return [...prev, msg];
+                });
             }
         };
 
         socket.on("message", handleIncomingMessage);
+
         return () => {
             socket.off("message", handleIncomingMessage);
         };
     }, [socket, activeRoomId]);
 
-    // 3. HANDLE USER SELECTION (JOIN ROOM)
+    // 4. Handle Room Selection
     const handleUserSelect = async (targetUser: User) => {
         if (loadingChat) return;
 
         setSelectedUser(targetUser);
-        setMessages([]); // Clear chat
+        setMessages([]); // Clear previous chat
         setActiveRoomId(null);
         setLoadingChat(true);
+        setShowEmojiPicker(false);
 
-        if (isMobileView) setShowSidebar(false);
+        // On mobile, hide sidebar when chat opens
+        if (window.innerWidth < 768) setIsSidebarOpen(false);
 
         try {
-            // A. Get Room ID
+            // A. Get/Create Room
             const payload = { otherUserId: targetUser._id };
             const res = await apiClient.post('/chat/rooms', payload);
 
@@ -112,25 +120,14 @@ export default function ChatPage() {
 
                 // B. Join Socket Room
                 if (socket && isConnected) {
-                    socket.emit("joinRoom", { roomId: room.roomId }, (ack: any) => {
-                        if (!ack?.ok) {
-                            console.error("Socket Join Failed:", ack?.error);
-                            toast.error("Connection issue. Please refresh.");
-                        }
-                    });
-                } else {
-                    toast.error("Socket disconnected. Trying to reconnect...");
-                    socket?.connect();
+                    socket.emit("joinRoom", { roomId: room.roomId });
                 }
 
                 // C. Fetch History
                 const msgRes = await apiClient.get(`/chat/messages/${room.roomId}`);
                 if (msgRes.data?.ok) {
                     setMessages(msgRes.data.data || []);
-                    setTimeout(() => messagesEndRef.current?.scrollIntoView(), 200);
                 }
-            } else {
-                throw new Error("Invalid room response");
             }
         } catch (error) {
             console.error("Chat Init Error:", error);
@@ -140,20 +137,44 @@ export default function ChatPage() {
         }
     };
 
-    // 4. SEND MESSAGE
+    // 5. Send Message (Optimistic UI)
     const handleSendMessage = (e?: React.FormEvent) => {
         e?.preventDefault();
         if (!newMessage.trim() || !socket || !activeRoomId) return;
 
         const text = newMessage;
-        setNewMessage('');
+        const tempId = Date.now().toString(); // ID for optimistic display
 
-        socket.emit("sendMessage", { roomId: activeRoomId, text }, (ack: any) => {
+        setNewMessage('');
+        setShowEmojiPicker(false);
+
+        // Optimistic update: Show message immediately
+        const optimisticMsg: Message = {
+            _id: tempId, // Temporary ID
+            tempId: tempId,
+            text,
+            from: user.userId, // Matches structure of real user object
+            createdAt: new Date().toISOString(),
+            roomId: activeRoomId,
+            status: 'sending'
+        };
+
+        setMessages(prev => [...prev, optimisticMsg]);
+
+        // Send to server
+        socket.emit("sendMessage", { roomId: activeRoomId, text, tempId }, (ack: any) => {
             if (!ack?.ok) {
-                toast.error("Message failed to send");
-                setNewMessage(text);
+                toast.error("Failed to send message");
+                // Remove the optimistic message if it failed
+                setMessages(prev => prev.filter(m => m._id !== tempId));
+                setNewMessage(text); // Put text back in input
             }
         });
+    };
+
+    // 6. Emoji Click Handler
+    const onEmojiClick = (emojiData: EmojiClickData) => {
+        setNewMessage((prev) => prev + emojiData.emoji);
     };
 
     const filteredUsers = usersList.filter(u =>
@@ -163,18 +184,18 @@ export default function ChatPage() {
     if (!user) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-orange-500" /></div>;
 
     return (
-        // MAIN CONTAINER: Fixed Height, Hidden Overflow to prevent body scroll
-        <div className="flex h-[calc(100vh-4rem)] w-full bg-white overflow-hidden border-t border-gray-200">
+        // === MAIN LAYOUT CONTAINER ===
+        // Uses CSS Grid for rigid structure.
+        // Mobile: 1 column. Desktop: 350px sidebar + 1fr chat area.
+        <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] h-[calc(100vh-4rem)] bg-white overflow-hidden font-sans border-t border-gray-200">
 
-            {/* ================= SIDEBAR (Fixed Width on Desktop) ================= */}
-            <div
-                className={`
-                    flex flex-col border-r border-gray-200 bg-white h-full transition-all duration-300 ease-in-out
-                    ${isMobileView ? (showSidebar ? 'w-full' : 'w-0 hidden') : 'w-[350px] min-w-[350px]'}
-                `}
-            >
-                {/* Header */}
-                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 h-16 flex-shrink-0">
+            {/* ================= LEFT SIDEBAR ================= */}
+            <div className={`
+                flex flex-col border-r border-gray-200 bg-white h-full
+                ${isSidebarOpen ? 'block' : 'hidden md:flex'} // Toggle logic for mobile
+            `}>
+                {/* Sidebar Header */}
+                <div className="h-16 flex-shrink-0 px-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 ring-2 ring-white shadow-sm">
                             <AvatarImage src={user.avatar} />
@@ -185,7 +206,7 @@ export default function ChatPage() {
                             <div className="flex items-center gap-1.5">
                                 <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`} />
                                 <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
-                                    {isConnected ? 'Online' : 'Offline'}
+                                    {isConnected ? 'Online' : 'Reconnecting...'}
                                 </span>
                             </div>
                         </div>
@@ -216,13 +237,14 @@ export default function ChatPage() {
                     </div>
                 </div>
 
-                {/* User List - SCROLLABLE AREA */}
+                {/* SCROLLABLE USER LIST */}
+                {/* overflow-y-auto is critical here for scrolling */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                     <div className="px-2 pb-2 space-y-1">
                         {loadingSidebar ? (
                             <div className="flex flex-col items-center justify-center py-10 space-y-2 text-gray-400">
                                 <Loader2 className="h-5 w-5 animate-spin" />
-                                <span className="text-xs">Loading...</span>
+                                <span className="text-xs">Syncing contacts...</span>
                             </div>
                         ) : filteredUsers.length === 0 ? (
                             <div className="p-8 text-center text-gray-400 text-sm">
@@ -255,7 +277,6 @@ export default function ChatPage() {
                                                 <h3 className={`font-semibold text-sm truncate ${isActive ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900'}`}>
                                                     {u.name}
                                                 </h3>
-                                                <span className="text-[10px] text-gray-400">Now</span>
                                             </div>
                                             <p className="text-xs text-gray-500 truncate capitalize">
                                                 {u.role}
@@ -269,26 +290,29 @@ export default function ChatPage() {
                 </div>
             </div>
 
-            {/* ================= CHAT AREA (Flexible Width) ================= */}
-            <main
-                className={`
-                    flex-1 flex flex-col h-full bg-[#E5DDD5] relative transition-all duration-300
-                    ${isMobileView && showSidebar ? 'hidden' : 'flex'}
-                `}
-            >
-                {/* Wallpaper Pattern */}
+            {/* ================= CHAT AREA ================= */}
+            <main className={`
+                flex flex-col h-full bg-[#E5DDD5] relative
+                ${!isSidebarOpen ? 'flex' : 'hidden md:flex'} // On mobile, hide if sidebar is open
+            `}>
+                {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-[0.06] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] pointer-events-none"></div>
 
                 {selectedUser ? (
                     <>
-                        {/* 1. HEADER */}
+                        {/* 1. CHAT HEADER */}
                         <div className="h-16 px-4 bg-white border-b border-gray-200 flex justify-between items-center z-10 shadow-sm flex-shrink-0">
                             <div className="flex items-center gap-3">
-                                {isMobileView && (
-                                    <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)} className="-ml-2 text-gray-600">
-                                        <ChevronLeft className="h-6 w-6" />
-                                    </Button>
-                                )}
+                                {/* Mobile Back Button */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="md:hidden -ml-2 text-gray-600"
+                                    onClick={() => setIsSidebarOpen(true)}
+                                >
+                                    <ChevronLeft className="h-6 w-6" />
+                                </Button>
+
                                 <Avatar className="h-9 w-9 cursor-pointer hover:opacity-90 transition-opacity">
                                     <AvatarImage src={selectedUser.avatar} />
                                     <AvatarFallback>{selectedUser.name?.charAt(0)}</AvatarFallback>
@@ -313,7 +337,7 @@ export default function ChatPage() {
                             </div>
                         </div>
 
-                        {/* 2. MESSAGES LIST (Scrollable) */}
+                        {/* 2. MESSAGES LIST (SCROLLABLE) */}
                         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                             {loadingChat ? (
                                 <div className="flex flex-col items-center justify-center h-full space-y-4">
@@ -335,12 +359,13 @@ export default function ChatPage() {
                             ) : (
                                 <div className="flex flex-col justify-end min-h-full space-y-2 pb-2">
                                     {messages.map((msg, index) => {
+                                        // Handle Robust ID Checking (Populated vs String)
                                         const senderId = typeof msg.from === 'object' ? msg.from._id : msg.from;
                                         const isMe = senderId === user.userId._id;
 
                                         return (
                                             <motion.div
-                                                key={msg._id || index}
+                                                key={msg._id || msg.tempId || index}
                                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}
@@ -354,7 +379,7 @@ export default function ChatPage() {
                                                     }
                                                     `}
                                                 >
-                                                    {/* Tail */}
+                                                    {/* Chat Bubble Tail */}
                                                     <span className={`absolute top-0 w-2 h-2 ${isMe ? '-right-2 border-[8px] border-[#E8A314] border-t-transparent border-r-transparent' : '-left-2 border-[8px] border-white border-t-transparent border-l-transparent'} transform ${isMe ? 'rotate-0' : 'rotate-180'}`}></span>
 
                                                     <p className="whitespace-pre-wrap leading-relaxed break-words">{msg.text}</p>
@@ -372,12 +397,32 @@ export default function ChatPage() {
                             )}
                         </div>
 
-                        {/* 3. INPUT AREA (Fixed at bottom) */}
+                        {/* 3. INPUT AREA */}
                         <div className="p-3 bg-[#F0F2F5] flex-shrink-0 z-10 border-t border-gray-200">
+                            {/* EMOJI PICKER POPUP */}
+                            {showEmojiPicker && (
+                                <div className="absolute bottom-20 left-4 z-50 shadow-2xl rounded-2xl overflow-hidden border border-gray-200">
+                                    <EmojiPicker
+                                        onEmojiClick={onEmojiClick}
+                                        width={300}
+                                        height={350}
+                                        previewConfig={{ showPreview: false }}
+                                    />
+                                </div>
+                            )}
+
                             <form onSubmit={handleSendMessage} className="flex items-end gap-2 max-w-5xl mx-auto">
-                                <Button type="button" variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-200 rounded-full h-10 w-10 shrink-0 hidden sm:flex">
-                                    <Smile className="h-6 w-6" />
-                                </Button>
+                                <div className="relative">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className={`rounded-full h-10 w-10 shrink-0 hidden sm:flex ${showEmojiPicker ? 'text-orange-500 bg-orange-100' : 'text-gray-500 hover:bg-gray-200'}`}
+                                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                    >
+                                        <Smile className="h-6 w-6" />
+                                    </Button>
+                                </div>
                                 <Button type="button" variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-200 rounded-full h-10 w-10 shrink-0">
                                     <Paperclip className="h-5 w-5" />
                                 </Button>
@@ -386,6 +431,7 @@ export default function ChatPage() {
                                     <Input
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
+                                        onFocus={() => setShowEmojiPicker(false)}
                                         placeholder="Type a message..."
                                         className="border-none shadow-none focus-visible:ring-0 bg-transparent min-h-[24px] py-0 px-0 text-base placeholder:text-gray-400"
                                         autoComplete="off"
@@ -410,7 +456,7 @@ export default function ChatPage() {
                     </>
                 ) : (
                     /* EMPTY STATE */
-                    <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] text-center p-8 border-l border-gray-200">
+                    <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-[#f0f2f5] border-l border-gray-200">
                         <div className="bg-white p-6 rounded-full shadow-sm mb-6">
                             <img src="/logo.svg" alt="App Logo" className="h-16 w-16 opacity-80" />
                         </div>
