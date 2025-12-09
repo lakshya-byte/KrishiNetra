@@ -198,13 +198,9 @@ export default function AddBatch() {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#2D7A3E] focus:ring-2 focus:ring-[#2D7A3E] focus:ring-opacity-20 transition-all"
                             >
                                 <option value="">Select a crop</option>
-                                <option value="tomatoes">Tomatoes</option>
-                                <option value="onions">Onions</option>
-                                <option value="peppers">Peppers</option>
-                                <option value="rice">Rice</option>
-                                <option value="cotton">Cotton</option>
-                                <option value="potatoes">Potatoes</option>
-                                <option value="other">Other</option>
+                                <option value="Rice">Rice</option>
+                                <option value="Wheat">Wheat</option>
+                                <option value="Mustard">Mustard</option>
                             </select>
                         </div>
 

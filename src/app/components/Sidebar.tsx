@@ -21,8 +21,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
     // Fallback to 'farmer' if user isn't loaded yet to prevent hydration mismatch, 
     // or handle loading state if preferred.
-    const role = user?.userId?.role || 'farmer';
-    const basePath = `/protected/${role.toLowerCase() === 'farmer' ? 'farmer' : 'distributor'}`;
+    const role = (user?.userId?.role || 'farmer').toLowerCase();
+    const basePath = `/protected/${role === 'farmer' ? 'farmer' : 'distributor'}`;
 
     // Navigation Configuration
     // 'roles' array defines who can see it. If undefined, everyone sees it.
@@ -54,15 +54,15 @@ export default function Sidebar({ isOpen, onClose }) {
             icon: User
         },
         {
-            path: '/chat', // Assuming chat is under the protected route
+            path: '/protected/chat', 
             label: 'Chat',
-            icon: MessageSquare // Changed to MessageSquare (BarChart3 is usually for stats)
+            icon: MessageSquare 
         },
     ];
 
     // Filter items based on the current user role
     const visibleNavItems = navItems.filter(item =>
-        !item.roles || item.roles.includes(role)
+        (item?.roles?.includes(role)) || !item.roles 
     );
 
     return (
@@ -98,7 +98,10 @@ export default function Sidebar({ isOpen, onClose }) {
                         const Icon = item.icon;
 
                         // Construct the full URL for this item
-                        const fullPath = `${basePath}${item.path}`;
+                        const fullPath =
+                        item.label === "Chat"
+                            ? "/protected/chat"
+                            : `${basePath}${item.path}`;
 
                         // Check if active (exact match or sub-path match)
                         const isActive = pathname === fullPath || pathname.startsWith(`${fullPath}/`);
@@ -107,7 +110,7 @@ export default function Sidebar({ isOpen, onClose }) {
                             <button
                                 key={item.path}
                                 onClick={() => {
-                                    router.push(fullPath);
+                                    router.replace(fullPath);
                                     // Optional: Close sidebar on mobile when clicked
                                     if (window.innerWidth < 1024) onClose();
                                 }}
