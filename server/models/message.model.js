@@ -27,7 +27,7 @@ const messageSchema = new mongoose.Schema(
         },
 
         readAt: {
-            type: Date,        // Per-message read timestamp
+            type: Date,
             default: null,
         },
     },

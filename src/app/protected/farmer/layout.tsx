@@ -1,10 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from './_components/Sidebar';
 import { ChevronRight, Home } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import path from 'path';
+import Sidebar from "@/app/components/Sidebar";
 
 
 export default function App({ children }) {

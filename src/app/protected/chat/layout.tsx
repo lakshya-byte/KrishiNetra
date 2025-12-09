@@ -13,7 +13,7 @@ export default function App({children}) {
                 onClose={() => setIsSidebarOpen(false)}
             />
             <main className="lg:ml-[280px] ">
-                <div className="p-4 md:p-8">
+                <div className=" ">
                     {children}
                 </div>
             </main>

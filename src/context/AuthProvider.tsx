@@ -1,6 +1,5 @@
 "use client";
 import { createContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { apiClient, GET_ME } from "@/service/api";
 
 export const AuthContext = createContext({
@@ -27,6 +26,7 @@ export default function AuthProvider({ children }) {
                 setLoading(false);
             }
         }
+
         // const access = getCookie('accessToken');
         // const refresh = getCookie('refreshToken');
         // if (!refresh || !access) {

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const chatRoomSchema = new mongoose.Schema(
+ const chatRoomSchema = new mongoose.Schema(
     {
         roomId: {
             type: String,

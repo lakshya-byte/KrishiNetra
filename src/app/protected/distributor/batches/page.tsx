@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react';
 import {Search, Plus, Edit, Eye} from 'lucide-react';
-import {apiClient, GET_ALL_BATCHES, GET_FARMER_BATCHES} from '@/service/api';
+import {apiClient, GET_ALL_BATCHES} from '@/service/api';
 import {useRouter} from 'next/navigation';
 
 // Helper function to calculate "Days Ago"

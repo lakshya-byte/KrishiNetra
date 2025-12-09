@@ -1,36 +1,39 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/context/AuthProvider";
 import {Toaster} from "react-hot-toast";
 import Nav from "@/app/components/Nav.tsx";
+import {SocketProvider} from "@/context/SocketProviderContext";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+    variable: "--font-geist-sans",
+    subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+    variable: "--font-geist-mono",
+    subsets: ["latin"],
 });
 
 export const metadata = {
-  title: "KrishiNetra",
-  description: "Create by HackLords - SIH 2025",
+    title: "KrishiNetra",
+    description: "Create by HackLords - SIH 2025",
 };
 
-export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Toaster position="top-right" />
+export default function RootLayout({children}) {
+    return (
+        <html lang="en">
+        <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+        <Toaster position="top-right"/>
         <AuthProvider>
-            <Nav />
-            {children}
+            <Nav/>
+            <SocketProvider>
+                {children}
+            </SocketProvider>
         </AuthProvider>
-      </body>
-    </html>
-  );
+        </body>
+        </html>
+    );
 }

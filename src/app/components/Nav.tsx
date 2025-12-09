@@ -14,6 +14,7 @@ import axios from 'axios'; // Import Axios
 
 const Nav = () => {
     const { user, loading, setUser } = useContext(AuthContext);
+    // console.log(user, loading, setUser, "user and loading")
     const [openDropdown, setOpenDropdown] = useState(false);
     const [scrolled, setScrolled] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -42,24 +43,17 @@ const Nav = () => {
     // --- 🟢 AXIOS LOGOUT HANDLER ---
     const handleLogout = async () => {
         try {
-            // 1. Send GET request to backend to clear HTTP-only cookies
             await axios.get('http://localhost:8000/api/auth/logout', {
                 withCredentials: true // CRITICAL: Allows browser to handle the Set-Cookie header
             });
 
-            // 2. Clear frontend state immediately
             if (setUser) setUser(null);
-
-            // 3. Redirect and close menu
             setOpenDropdown(false);
-            router.push('/');
-            // Optional: router.refresh() if you use Server Components that depend on the cookie
+            router.push('/auth');
 
         } catch (error) {
             console.error("Logout failed", error);
-            // Even if the API fails, you might want to force a client-side cleanup:
-            // if (setUser) setUser(null);
-            // router.push('/');
+
         }
     };
 
@@ -98,21 +92,21 @@ const Nav = () => {
                     </div>
                 </div>
 
-                {/*/!* --- Center: Role Badge --- *!/*/}
-                {/*{user && (*/}
-                {/*    <div className='hidden md:flex items-center gap-2 animate-fade-in'>*/}
-                {/*        <div className={`*/}
-                {/*            px-4 py-1.5 rounded-full text-sm font-medium border flex items-center gap-2 shadow-sm*/}
-                {/*//            // ${user.userId.role === 'farmer'*/}
-                {/*            // ? 'bg-forest-green/10 text-forest-green border-forest-green/20'*/}
-                {/*            // : 'bg-ashoka-blue/10 text-ashoka-blue border-ashoka-blue/20'*/}
-                {/*        }*/}
-                {/*        `}>*/}
-                {/*            <LayoutDashboard size={14} />*/}
-                {/*            <span className="capitalize">{user.userId.role} Dashboard</span>*/}
-                {/*        </div>*/}
-                {/*    </div>*/}
-                {/*)}*/}
+                {/* --- Center: Role Badge --- */}
+                {user && (
+                    <div className='hidden md:flex items-center gap-2 animate-fade-in'>
+                        <div className={`
+                            px-4 py-1.5 rounded-full text-sm font-medium border flex items-center gap-2 shadow-sm
+                //            // ${user.userId.role === 'farmer'
+                            // ? 'bg-forest-green/10 text-forest-green border-forest-green/20'
+                            // : 'bg-ashoka-blue/10 text-ashoka-blue border-ashoka-blue/20'
+                        }
+                        `}>
+                            <LayoutDashboard size={14} />
+                            <span className="capitalize">{user.userId.role} Dashboard</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* --- Right Actions --- */}
                 <div className='flex items-center gap-4'>
@@ -157,6 +151,10 @@ const Nav = () => {
                                             {/*<p className='text-xs text-muted-foreground truncate'>{user.email || 'user@krishinetra.com'}</p>*/}
                                         </div>
                                         <div className='p-1'>
+                                            <button className='flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors'>
+                                                <LayoutDashboard size={16} />
+                                                <span onClick={()=>router.push("/protected/farmer/dashboard")}>Dashboard</span>
+                                            </button>
                                             <button className='flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors'>
                                                 <User size={16} />
                                                 <span onClick={()=>router.push("/protected/farmer/dashboard")}>Profile</span>
