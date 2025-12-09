@@ -14,52 +14,46 @@ const SocketContext = createContext<SocketContextType>({
     isConnected: false,
 });
 
-// Custom hook for easy access
 export const useSocket = () => {
     return useContext(SocketContext);
 };
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-    const { user } = useContext(AuthContext); // Get user from your existing AuthProvider
+    const { user } = useContext(AuthContext);
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        // 1. Only connect if user is logged in
-        if (user) {
-            // Initialize Socket
-            const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000", {
-                withCredentials: true, // Important for Cookies
-                autoConnect: false,    // We connect manually below
-            });
+        if (!user) return;
 
-            // 2. Setup Listeners
-            socketInstance.on("connect", () => {
-                console.log("🟢 Socket Connected:", socketInstance.id);
-                setIsConnected(true);
-            });
+        // Initialize Socket
+        const socketInstance = io("http://localhost:8000", { // Your Backend URL
+            withCredentials: true, // <--- CRITICAL: Sends the cookies
+            autoConnect: true,
+            transports: ["websocket", "polling"], // Try websocket first
+        });
 
-            socketInstance.on("disconnect", () => {
-                console.log("🔴 Socket Disconnected");
-                setIsConnected(false);
-            });
+        socketInstance.on("connect", () => {
+            console.log("🟢 Socket Connected:", socketInstance.id);
+            setIsConnected(true);
+        });
 
-            socketInstance.on("connect_error", (err) => {
-                console.error("Socket Connection Error:", err);
-            });
+        socketInstance.on("disconnect", (reason) => {
+            console.log("🔴 Socket Disconnected:", reason);
+            setIsConnected(false);
+        });
 
-            // 3. Connect!
-            socketInstance.connect();
-            setSocket(socketInstance);
+        socketInstance.on("connect_error", (err) => {
+            console.error("⚠️ Socket Connection Error:", err.message);
+            // This will show if the backend auth middleware rejected the cookie
+        });
 
-            // 4. Cleanup on Unmount or Logout
-            return () => {
-                socketInstance.disconnect();
-                setSocket(null);
-                setIsConnected(false);
-            };
-        }
-    }, [user]); // Re-run if user changes (Login/Logout)
+        setSocket(socketInstance);
+
+        return () => {
+            socketInstance.disconnect();
+        };
+    }, [user]);
 
     return (
         <SocketContext.Provider value={{ socket, isConnected }}>
