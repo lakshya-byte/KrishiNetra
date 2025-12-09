@@ -22,7 +22,15 @@ export default function Sidebar({ isOpen, onClose }) {
     // Fallback to 'farmer' if user isn't loaded yet to prevent hydration mismatch, 
     // or handle loading state if preferred.
     const role = (user?.userId?.role || 'farmer').toLowerCase();
-    const basePath = `/protected/${role === 'farmer' ? 'farmer' : 'distributor'}`;
+    let basePath = "/protected";
+    console.log("User Role in Sidebar:", role);
+    if(role === 'retailer'){
+        basePath = `/protected/retailer`;
+    }else if(role === 'farmer'){
+        basePath = `/protected/farmer`;
+    }else if(role === 'distributor'){
+        basePath = `/protected/distributor`;
+    }
 
     // Navigation Configuration
     // 'roles' array defines who can see it. If undefined, everyone sees it.

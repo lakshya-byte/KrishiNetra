@@ -125,7 +125,7 @@ export default function Batches() {
                         style={{
                             animation: `fadeInUp 300ms ease-out ${index * 100}ms both`,
                         }}
-                        onClick={() => router.replace(`/protected/distributor/batches/${batch.id}`)}
+                        onClick={() => router.replace(`/protected/retailer/batches/${batch.id}`)}
                     >
                         {/* Image Section */}
                         <div className="relative h-40 overflow-hidden group bg-gray-100">
