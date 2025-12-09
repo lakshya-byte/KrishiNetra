@@ -41,12 +41,19 @@ export default function Sidebar({ isOpen, onClose }) {
             path: '/addBatch',
             label: 'Add Batch',
             icon: Plus,
-            roles: ['farmer'] // Only Farmer sees this
+            roles: ['farmer'] 
         },
         {
-            path: '/ongoingBidding',
-            label: 'Bidding Batches',
-            icon: Gavel
+            path: '/viewResidues',
+            label: 'View Residues',
+            icon: Package,
+            roles: ['distributor'] 
+        },
+        {
+            path: '/createResidue',
+            label: 'Create Residue',
+            icon: Plus,
+            roles: ['farmer'] 
         },
         {
             path: '/profile',
