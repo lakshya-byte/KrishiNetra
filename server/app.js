@@ -9,6 +9,7 @@ import retailerRouter from "./routes/retailer.route.js";
 import uploadRouter from "./routes/upload.route.js";
 import adminRouter from "./routes/admin.route.js";
 import chatRouter from "./routes/chat.route.js";
+import residueRouter from "./routes/residue.route.js";
 
 
 const app = express();
@@ -34,5 +35,6 @@ app.use("/api/retailer", retailerRouter);
 app.use("/api/admin",adminRouter);
 app.use("/api/upload", uploadRouter);
 app.use("/api/chat", chatRouter)
+app.use("/api/residue", residueRouter);
 
 export { app };
